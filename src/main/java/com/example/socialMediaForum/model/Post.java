@@ -18,15 +18,17 @@ import lombok.Setter;
 public class Post {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private Long postId;
 
   @ManyToOne
-  @JoinColumn(name = "thread_id", nullable = false)
-  private Thread thread;
+  @JoinColumn(name = "forum_thread_id", nullable = false)
+  private ForumThread thread;
 
-  private String content;
+  private String postContent;
 
-  private LocalDateTime createdAt;
+  private LocalDateTime postCreatedAt;
+
+  private LocalDateTime postLastUpdatedAt;
 
   private int upvotes;
 

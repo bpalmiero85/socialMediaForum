@@ -19,13 +19,15 @@ import java.util.List;
 public class ForumThread {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private Long forumThreadId;
 
   private String title;
 
   private String content;
 
   private LocalDateTime createdAt;
+
+  private LocalDateTime lastUpdatedAt;
 
   @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<Post> posts;
