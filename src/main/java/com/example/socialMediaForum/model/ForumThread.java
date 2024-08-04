@@ -29,8 +29,12 @@ public class ForumThread {
 
   private LocalDateTime lastUpdatedAt;
 
-  @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Post> posts;
+
+  public Long getForumThreadId() {
+    return forumThreadId;
+  }
 
 
 }

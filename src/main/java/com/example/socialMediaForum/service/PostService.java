@@ -1,7 +1,9 @@
 package com.example.socialMediaForum.service;
 
+import com.example.socialMediaForum.model.ForumThread;
 import com.example.socialMediaForum.model.Post;
 import com.example.socialMediaForum.repository.PostRepository;
+import com.example.socialMediaForum.repository.ForumThreadRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,12 +17,19 @@ public class PostService {
   @Autowired
   private PostRepository postRepository;
 
-  public List<Post> getAllPostsByThreadId(Long threadId) {
-    return postRepository.findByThread_ForumThreadId(threadId);
+  @Autowired 
+  private ForumThreadRepository forumThreadRepository;
+
+  public List<Post> getAllPostsByThreadId(Long forumThreadId) {
+    return postRepository.findByThread_ForumThreadId(forumThreadId);
   }
 
   public Post createPost(Post post) {
+    ForumThread forumThread = forumThreadRepository.findById(post.getThread().getForumThreadId())
+        .orElseThrow(() -> new IllegalArgumentException("Thread not found"));
+    post.setThread(forumThread);
     post.setPostCreatedAt(LocalDateTime.now());
+    post.setPostLastUpdatedAt(LocalDateTime.now());
     return postRepository.save(post);
   }
 
@@ -30,7 +39,6 @@ public class PostService {
       postRepository.delete(optionalPost.get());
       return true;
     }
-    
     return false;
   }
 
@@ -40,19 +48,7 @@ public class PostService {
       Post existingPost = optionalPost.get();
       existingPost.setPostContent(postDetails.getPostContent());
       existingPost.setPostLastUpdatedAt(LocalDateTime.now());
-
       return postRepository.save(existingPost);
-    } else {
-      return null;
-    }
-  }
-
-  public Post upvotePost(Long postId) {
-    Optional<Post> optionalPost = postRepository.findById(postId);
-    if (optionalPost.isPresent()) {
-      Post post = optionalPost.get();
-      post.setUpvotes(post.getUpvotes() + 1);
-      return postRepository.save(post);
     } else {
       return null;
     }
