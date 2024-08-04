@@ -13,6 +13,8 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Getter
 @Setter
 @Entity
@@ -30,11 +32,8 @@ public class ForumThread {
   private LocalDateTime lastUpdatedAt;
 
   @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference
   private List<Post> posts;
-
-  public Long getForumThreadId() {
-    return forumThreadId;
-  }
 
 
 }

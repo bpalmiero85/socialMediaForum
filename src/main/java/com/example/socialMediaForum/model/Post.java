@@ -2,6 +2,8 @@ package com.example.socialMediaForum.model;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,6 +24,7 @@ public class Post {
 
   @ManyToOne
   @JoinColumn(name = "forum_thread_id", nullable = false)
+  @JsonBackReference
   private ForumThread thread;
 
   private String postContent;
