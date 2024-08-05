@@ -1,0 +1,50 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 60px;
+  width: 100vw;
+  background-color: #033645;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "Arial", sans-serif;
+  z-index: 1000;
+  margin: 0;
+  padding: 0 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.navbar-title {
+  color: white;
+  font-size: 20px;
+}
+
+.navbar a {
+  text-align: center;
+  color: white;
+  font-size: 20px;
+  transition: color 0.3s;
+  padding: 20px;
+  text-decoration: none;
+}
+
+.navbar a:hover {
+  color: #14877f;
+}
+
+.links-container {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.edit-profile-link {
+  font-size: 12px;
+  margin-right: 10px;
+}
+
+.active {
+  background-color: #5fadc3;
+}

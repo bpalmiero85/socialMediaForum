@@ -1,4 +1,4 @@
-package com.example.socialMediaForum.repository;
+package com.example.socialMediaForum.repositories;
 
 import com.example.socialMediaForum.model.Post;
 import org.springframework.data.jpa.repository.JpaRepository;

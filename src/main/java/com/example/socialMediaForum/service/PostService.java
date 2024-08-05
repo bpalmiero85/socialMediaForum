@@ -2,8 +2,9 @@ package com.example.socialMediaForum.service;
 
 import com.example.socialMediaForum.model.ForumThread;
 import com.example.socialMediaForum.model.Post;
-import com.example.socialMediaForum.repository.PostRepository;
-import com.example.socialMediaForum.repository.ForumThreadRepository;
+import com.example.socialMediaForum.repositories.ForumThreadRepository;
+import com.example.socialMediaForum.repositories.PostRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

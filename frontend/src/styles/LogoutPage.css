@@ -1,0 +1,18 @@
+.logout-message {
+  margin-top: 100px;
+  margin-left: 35px;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  justify-content: center;
+}
+
+.logout-header {
+  text-align: center;
+}
+
+.login-title {
+  display: flex;
+  text-align: center;
+  margin-top: -20%;
+}

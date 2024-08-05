@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.example.socialMediaForum.model.ForumThread;
-import com.example.socialMediaForum.repository.ForumThreadRepository;
+import com.example.socialMediaForum.repositories.ForumThreadRepository;
 
 @Service
 public class ThreadService {
