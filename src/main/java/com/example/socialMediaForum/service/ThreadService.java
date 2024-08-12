@@ -1,6 +1,5 @@
 package com.example.socialMediaForum.service;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,50 +19,48 @@ public class ThreadService {
     return forumThreadRepository.findAll();
   }
 
-  public boolean deleteForumThread(Long forumThreadId){
+  public boolean deleteForumThread(Long forumThreadId) {
     Optional<ForumThread> optionalForumThread = forumThreadRepository.findById(forumThreadId);
-    if(optionalForumThread.isPresent()){
+    if (optionalForumThread.isPresent()) {
       forumThreadRepository.delete(optionalForumThread.get());
       return true;
     }
     return false;
-    }
-  
+  }
 
-   public ForumThread createThread(ForumThread forumThread) {
-        forumThread.setCreatedAt(LocalDateTime.now());
-        return forumThreadRepository.save(forumThread);
-    }
+  public ForumThread createThread(ForumThread forumThread) {
+    forumThread.setCreatedAt(LocalDateTime.now());
+    return forumThreadRepository.save(forumThread);
+  }
 
-    public ForumThread updateForumThread(ForumThread forumThreadDetails, Long forumThreadId){
-      Optional<ForumThread> optionalThread = forumThreadRepository.findById(forumThreadId);
-      if(optionalThread.isPresent()) {
-        ForumThread existingForumThread = optionalThread.get();
-        existingForumThread.setTitle(forumThreadDetails.getTitle());
-        existingForumThread.setContent(forumThreadDetails.getContent());
-        existingForumThread.setLastUpdatedAt(LocalDateTime.now());
+  public ForumThread updateForumThread(ForumThread forumThreadDetails, Long forumThreadId) {
+    Optional<ForumThread> optionalThread = forumThreadRepository.findById(forumThreadId);
+    if (optionalThread.isPresent()) {
+      ForumThread existingForumThread = optionalThread.get();
+      existingForumThread.setTitle(forumThreadDetails.getTitle());
+      existingForumThread.setContent(forumThreadDetails.getContent());
+      existingForumThread.setLastUpdatedAt(LocalDateTime.now());
 
-        return forumThreadRepository.save(existingForumThread);
-      } else {
-        try {
-          throw new Exception("Thread not found with id " + forumThreadId);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
+      return forumThreadRepository.save(existingForumThread);
+    } else {
+      try {
+        throw new Exception("Thread not found with id " + forumThreadId);
+      } catch (Exception e) {
+        e.printStackTrace();
       }
-      return forumThreadDetails;
-      
-
     }
+    return forumThreadDetails;
 
-    public ForumThread getThreadById(Long forumThreadId) {
-      Optional<ForumThread> thread = forumThreadRepository.findById(forumThreadId);
-      return thread.orElse(null);
-    }
+  }
 
-    public ForumThread save(ForumThread forumThread) {
-      forumThread.setCreatedAt(LocalDateTime.now());
-      return forumThreadRepository.save(forumThread);
+  public ForumThread getThreadById(Long forumThreadId) {
+    Optional<ForumThread> thread = forumThreadRepository.findById(forumThreadId);
+    return thread.orElse(null);
+  }
+
+  public ForumThread save(ForumThread forumThread) {
+    forumThread.setCreatedAt(LocalDateTime.now());
+    return forumThreadRepository.save(forumThread);
   }
 
 }
