@@ -30,7 +30,7 @@ public class SecurityConfig {
         config.addAllowedHeader("*");
         config.addAllowedMethod(HttpMethod.GET);
         config.addAllowedMethod(HttpMethod.POST);
-        config.addAllowedMethod(HttpMethod.DELETE);  
+        config.addAllowedMethod(HttpMethod.DELETE);
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
     }
@@ -42,9 +42,8 @@ public class SecurityConfig {
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers(HttpMethod.POST, "/user/**").permitAll()
-                .antMatchers(HttpMethod.PUT, "/user/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/user/**").permitAll()
-                .antMatchers(HttpMethod.DELETE, "/user/**").permitAll()  // Allow DELETE method for /user/**
+                .antMatchers(HttpMethod.DELETE, "/user/**").permitAll() 
                 .antMatchers("/h2-console/**").permitAll()
                 .anyRequest().authenticated()
                 .and()

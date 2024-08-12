@@ -1,10 +1,5 @@
 package com.example.socialMediaForum.controller;
 
-
-import jakarta.persistence.Column;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,8 +18,6 @@ import javax.servlet.http.HttpSession;
 @RequestMapping("/user")
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class UserController {
-
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
     private UserServiceImpl userServiceImpl;
@@ -61,7 +54,6 @@ public class UserController {
 
             return ResponseEntity.ok("Please check your email to verify your account.");
         } catch (Exception e) {
-            logger.error("Error during user registration: ", e);
             return ResponseEntity.status(500).body("An internal server error occurred.");
         }
     }
@@ -81,13 +73,10 @@ public class UserController {
             session.setAttribute("userId", user.getId());
             sessionTrackingService.addSession(session.getId(), user.getId());
 
-            logger.info("User verified and logged in: {}", user.getId());
-
             String redirectUrl = "http://localhost:3000/welcome?username=" + user.getUsername();
             return ResponseEntity.status(302).header("Location", redirectUrl).build();
 
         } catch (Exception e) {
-            logger.error("Error during user verification: ", e);
             return ResponseEntity.status(500).body("An internal server error occurred.");
         }
     }
@@ -101,7 +90,6 @@ public class UserController {
             }
             return ResponseEntity.ok(user);
         } catch (Exception e) {
-            logger.error("Error checking verification status: ", e);
             return ResponseEntity.status(500).body("An internal server error occurred.");
         }
     }
@@ -123,13 +111,11 @@ public class UserController {
                 HttpSession session = request.getSession(true);
                 session.setAttribute("userId", user.getId());
                 sessionTrackingService.addSession(session.getId(), user.getId());
-                logger.info("User logged in: {}", user.getId());
                 return ResponseEntity.ok("Login successful");
             } else {
                 return ResponseEntity.status(401).body("Invalid username or password");
             }
         } catch (Exception e) {
-            logger.error("Error during login: ", e);
             return ResponseEntity.status(500).body("An internal server error occurred.");
         }
     }
@@ -143,16 +129,10 @@ public class UserController {
                 if (userId != null) {
                     sessionTrackingService.removeSession(session.getId(), userId);
                     session.invalidate();
-                    logger.info("User logged out: {}", userId);
-                } else {
-                    logger.warn("User ID not found in session: {}", session.getId());
                 }
-            } else {
-                logger.warn("No session found for logout.");
             }
             return ResponseEntity.ok("Logged out");
         } catch (Exception e) {
-            logger.error("Error during logout: ", e);
             return ResponseEntity.status(500).body("An internal server error occurred.");
         }
     }
@@ -169,7 +149,6 @@ public class UserController {
             }
             return ResponseEntity.ok(user);
         } catch (Exception e) {
-            logger.error("Error fetching user info: ", e);
             return ResponseEntity.status(500).body("An internal server error occurred.");
         }
     }
@@ -193,7 +172,6 @@ public class UserController {
             userServiceImpl.save(existingUser);
             return ResponseEntity.ok(existingUser);
         } catch (Exception e) {
-            logger.error("Error updating user: ", e);
             return ResponseEntity.status(500).body("An internal server error occurred.");
         }
     }
@@ -204,13 +182,10 @@ public class UserController {
             HttpSession session = request.getSession(false);
             if (session != null) {
                 Long userId = (Long) session.getAttribute("userId");
-                logger.info("Fetch active user: username = {}", userId);
             }
             int activeUsers = sessionTrackingService.getActiveSessions();
-            logger.info("Active users count: {}", activeUsers);
             return ResponseEntity.ok(activeUsers);
         } catch (Exception e) {
-            logger.error("Error fetching active users: ", e);
             return ResponseEntity.status(500).body(null);
         }
     }
@@ -225,7 +200,6 @@ public class UserController {
             userServiceImpl.deleteUserById(id);
             return ResponseEntity.ok("User deleted successfully");
         } catch (Exception e) {
-            logger.error("Error deleting user: ", e);
             return ResponseEntity.status(500).body("An internal server error occurred.");
         }
     }

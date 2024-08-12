@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,7 @@ import com.example.socialMediaForum.service.ThreadService;
 
 @RestController
 @RequestMapping("/threads")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class ForumThreadController {
   @Autowired
   private ThreadService threadService;
@@ -37,8 +39,18 @@ public class ForumThreadController {
   }
 
   @PostMapping
-  public ForumThread createThread(@RequestBody ForumThread forumThread) {
-    return threadService.save(forumThread);
+  public ResponseEntity<?> createThread(@RequestBody ForumThread forumThread) {
+      try {
+          if (forumThread == null || forumThread.getTitle() == null || forumThread.getContent() == null) {
+              return ResponseEntity.badRequest().body("Title and content must be provided");
+          }
+          ForumThread savedThread = threadService.save(forumThread);
+          return ResponseEntity.ok(savedThread);
+      } catch (IllegalArgumentException e) {
+          return ResponseEntity.badRequest().body(e.getMessage());
+      } catch (Exception e) {
+          return ResponseEntity.status(500).body("An internal server error occurred.");
+      }
   }
 
   @PutMapping("/{forumThreadId}")
@@ -60,3 +72,5 @@ public class ForumThreadController {
     return ResponseEntity.noContent().build();
   }
 }
+
+
