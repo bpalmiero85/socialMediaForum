@@ -40,18 +40,19 @@ public class ForumThreadController {
 
   @PostMapping
   public ResponseEntity<?> createThread(@RequestBody ForumThread forumThread) {
-      try {
-          if (forumThread == null || forumThread.getTitle() == null || forumThread.getContent() == null) {
-              return ResponseEntity.badRequest().body("Title and content must be provided");
-          }
-          ForumThread savedThread = threadService.save(forumThread);
-          return ResponseEntity.ok(savedThread);
-      } catch (IllegalArgumentException e) {
-          return ResponseEntity.badRequest().body(e.getMessage());
-      } catch (Exception e) {
-          return ResponseEntity.status(500).body("An internal server error occurred.");
-      }
+    try {
+        if (forumThread == null || forumThread.getTitle() == null || forumThread.getContent() == null) {
+            return ResponseEntity.badRequest().body("Title and content must be provided");
+        }
+        ForumThread savedThread = threadService.save(forumThread);
+        return ResponseEntity.ok(savedThread);
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    } catch (Exception e) {
+        return ResponseEntity.status(500).body("An internal server error occurred.");
+    }
   }
+  
 
   @PutMapping("/{forumThreadId}")
   public ResponseEntity<ForumThread> updateThread(@PathVariable Long forumThreadId,

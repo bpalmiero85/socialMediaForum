@@ -50,40 +50,16 @@ body {
   margin-top: 20px;
 }
 
-.create-thread-button {
-  display: flex;
-  position: absolute;
-  margin-top: 585px;
-  padding: 5px;
-  border-radius: 5px;
-  color: black;
-  background-color: lightgreen;
-}
+.thread-container{
 
-.create-thread-button:hover {
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 5px;
-  color: white;
-  background-color: rgb(17, 131, 17);
-}
-
-.create-thread-title {
-  text-align: center;
-}
-
-.thread-description {
-  justify-content: center;
 }
 
 .thread-input{
-  display: flex;
-  justify-content: center;
+
 }
 
-.create-button{
-  margin-left: 400px;
-  display: flex;
-  position: absolute;
-  justify-content: center;
+.thread-submit{
+  
 }
+
+

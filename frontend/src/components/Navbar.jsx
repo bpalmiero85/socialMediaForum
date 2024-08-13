@@ -98,6 +98,32 @@ function Navbar() {
             <Link to="/">Sign In</Link>
           </div>
         );
+        case "/threads":
+        return (
+          <div className="links-container">
+            <Link
+              to={
+                user.username
+                  ? `/homepage?username=${user.username}`
+                  : "/register"
+              }
+            >
+              Home
+            </Link>
+            <Link
+              to={`/userinfo?username=${user.username}`}
+              className="edit-profile-link"
+            >
+              Edit Profile
+            </Link>
+            <Link
+              to={`/logout?username=${user.username}`}
+              onClick={handleLogout}
+            >
+              Sign Out
+            </Link>
+          </div>
+        );
       default:
         return (
           <div className="links-container">
