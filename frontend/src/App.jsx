@@ -33,6 +33,7 @@ const App = () => {
         <Route path="/logout" element={<LogoutPage />} />
         <Route path="/active-users" element={<ActiveUsers />} />
         <Route path="/homepage" element={<HomePage />} />
+      
 
         {isVerified ? (
           <Route path="/welcome" element={<WelcomePage />} />
