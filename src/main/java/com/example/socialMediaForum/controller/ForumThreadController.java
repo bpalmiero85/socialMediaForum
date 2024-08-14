@@ -24,9 +24,10 @@ public class ForumThreadController {
   @Autowired
   private ThreadService threadService;
 
-  @GetMapping
-  public List<ForumThread> getAllThreads() {
-    return threadService.getAllThreads();
+  @GetMapping(produces = "application/json")
+  public ResponseEntity<List<ForumThread>> getAllThreads() {
+      List<ForumThread> threads = threadService.getAllThreads();
+      return ResponseEntity.ok().body(threads);
   }
 
   @GetMapping("/{forumThreadId}")
@@ -38,7 +39,7 @@ public class ForumThreadController {
     return ResponseEntity.ok(forumThread);
   }
 
-  @PostMapping
+  @PostMapping(produces = "application/json")
   public ResponseEntity<?> createThread(@RequestBody ForumThread forumThread) {
     try {
         if (forumThread == null || forumThread.getTitle() == null || forumThread.getContent() == null) {

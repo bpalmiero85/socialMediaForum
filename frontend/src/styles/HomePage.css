@@ -10,6 +10,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  margin-top: 250px;
   height: 100vh;
 }
 
@@ -34,12 +35,16 @@ body {
 
 .home-header {
   font-size: 2.5rem;
-  margin-bottom: 20px;
+  margin-bottom: 300px;
+  padding-bottom: 5px;
+  padding-top: 205px;
 }
 
 .home-message {
   font-size: 1.2rem;
   text-align: center;
+  padding-top: 95px;
+  margin-top: -580px;
   max-width: 600px;
 }
 
@@ -53,7 +58,7 @@ body {
 .create-thread-button {
   display: flex;
   position: absolute;
-  margin-top: 585px;
+  margin-top: 185px;
   padding: 5px;
   border-radius: 5px;
   color: black;
@@ -69,6 +74,7 @@ body {
 }
 
 .create-thread-title {
+  margin-top: 100px;
   text-align: center;
 }
 
@@ -79,11 +85,44 @@ body {
 .thread-input{
   display: flex;
   justify-content: center;
+  padding: 5px;
+}
+
+.comments-header{
+  margin-top:600px;
+}
+
+.thread-details{
+  margin-top: 450px;
 }
 
 .create-button{
   margin-left: 400px;
   display: flex;
-  position: absolute;
+  position: relative;
   justify-content: center;
+  margin-left: 110px;
+}
+
+.thread-list{
+  display: flex;
+  flex-direction:column;
+  justify-content: center;
+  position: absolute;
+  background-color: rgb(209, 249, 114);
+  margin-top: 750px;
+  width: auto;
+  border-radius: 15px;
+  padding: 20px;
+}
+
+.comment-list{
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  width: auto;
+  background-color: rgba(216, 251, 140, 0.651);
+  border-radius: 15px;
+  padding: 20px;
+  margin-top: 20px;
 }
