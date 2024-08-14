@@ -44,7 +44,7 @@ public class ThreadService {
       return forumThreadRepository.save(existingForumThread);
     } else {
       try {
-        throw new Exception("Thread not found with id " + forumThreadId);
+        throw new Exception("Post not found with id " + forumThreadId);
       } catch (Exception e) {
         e.printStackTrace();
       }
