@@ -11,7 +11,6 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import LogoutPage from "./pages/LogoutPage";
 import RegisterPage from "./pages/RegisterPage";
-import WelcomePage from "./pages/WelcomePage";
 import VerificationPage from "./pages/VerificationPage";
 import ActiveUsers from "./components/ActiveUsers";
 import Navbar from "./components/Navbar";
@@ -36,7 +35,7 @@ const App = () => {
       
 
         {isVerified ? (
-          <Route path="/welcome" element={<WelcomePage />} />
+          <Route path="/homepage" element={<HomePage />} />
         ) : (
           <Route path="/register" element={<RegisterPage />} />
         )}

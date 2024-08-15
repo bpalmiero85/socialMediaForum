@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import "../styles/HomePage.css";
 import useFetchUser from "../components/FetchUser";
 
 const HomePage = () => {
   const { user, error } = useFetchUser();
-  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -68,6 +66,7 @@ const HomePage = () => {
             setSuccessMessage("Post created successfully!");
             setTitle("");
             setContent("");
+            fetchThreads(threads);
             setShowForm(false);
         } else {
             throw new Error("Expected JSON, got something else");
@@ -122,6 +121,7 @@ const HomePage = () => {
       if (contentType && contentType.includes("application/json")) {
         const newComment = await response.json();
         setComments([newComment, ...comments]);
+        fetchComments(comments);
         setCommentContent("");
       } else {
         throw new Error("Expected JSON, got something else");

@@ -8,28 +8,34 @@ const VerificationPage = () => {
   const [, setCookie] = useCookies(["user"]);
   const queryParams = new URLSearchParams(location.search);
   const username = queryParams.get("username");
+  const email = queryParams.get("email");
   const code = queryParams.get("code");
 
   const [isVerified, setIsVerified] = useState(false);
 
-  useEffect(() => {  
+ 
+  console.log("location.search:", location.search);
+  console.log("Parsed username:", username);
+  console.log("Parsed email:", email);
+  console.log("Parsed code:", code);
+
+  useEffect(() => {
     const verifyUser = async () => {
-      if(!code || !username) {
+      if (!code || !username) {
         console.error("Verification code or username is missing");
         navigate("/error");
         return;
       }
       try {
-
         console.log("Starting verification process...");
-        const response = await fetch(`http://localhost:8080/user/verify?code=${code}&username=${username}`, {
+        const response = await fetch(`http://localhost:8080/user/verify?email=${email}&code=${code}&username=${username}`, {
           method: "GET",
           credentials: "include",
         });
 
         if (response.ok) {
           const user = await response.json();
-          console.log("Verification successful", user)
+          console.log("Verification successful", user);
           setCookie("user", user.username, { path: "/" });
           setIsVerified(true);
         } else {
@@ -50,48 +56,51 @@ const VerificationPage = () => {
     }
   }, [code, navigate, setCookie, username]);
 
-  const interval = setInterval(async () =>{
-    try{
-      const response = await fetch(`http://localhost:8080/user/verify-status?username=${username}`, {
-        method: "GET",
-        credentials: "include",
-      });
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/user/verify-status?username=${username}`, {
+          method: "GET",
+          credentials: "include",
+        });
 
-      if (response.ok) {
-        const user = await response.json();
-        if(user.enabled) {
-          setCookie("user", user.username, { path: "/"});
-          setIsVerified(true);
+        if (response.ok) {
+          const user = await response.json();
+          if (user.enabled) {
+            setCookie("user", user.username, { path: "/" });
+            setIsVerified(true);
+          }
         }
+      } catch (error) {
+        console.error("Error checking verification status:", error);
       }
-    } catch (error) {
-      console.error("Error checking verification status:", error);
-    }
-  }, 1000);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [username, setCookie]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if(isVerified) {
+      if (isVerified) {
         navigate(`/`);
       }
     }, 1000);
 
     return () => clearInterval(interval);
+  }, [isVerified, navigate]);
 
-    }, [code, navigate, isVerified, setCookie, username]);
-
-    useEffect(() => {
-      if(isVerified){
-        navigate(`/`);
-      }
-    }, [isVerified, navigate, username]);
-  
+  useEffect(() => {
+    if (isVerified) {
+      navigate(`/`);
+    }
+  }, [isVerified, navigate]);
 
   return (
     <div>
       <h2>Email Verification Required</h2>
       <p>Please check your email and click on the verification link to verify your account.</p>
       {username && <p>Username: {username}</p>}
+      {email && <p>Email: {email}</p>}
     </div>
   );
 };
