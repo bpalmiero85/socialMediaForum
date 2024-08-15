@@ -73,8 +73,8 @@ public class UserController {
             session.setAttribute("userId", user.getId());
             sessionTrackingService.addSession(session.getId(), user.getId());
 
-            String redirectUrl = "http://localhost:3000/welcome?username=" + user.getUsername();
-            return ResponseEntity.status(302).header("Location", redirectUrl).build();
+            String redirectUrl = "http://localhost:3000/homepage?username=" + user.getUsername();
+            return ResponseEntity.status(302).header("Location", redirectUrl).body(null);
 
         } catch (Exception e) {
             return ResponseEntity.status(500).body("An internal server error occurred.");
