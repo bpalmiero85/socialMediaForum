@@ -18,7 +18,7 @@ public class PostService {
   @Autowired
   private PostRepository postRepository;
 
-  @Autowired 
+  @Autowired
   private ForumThreadRepository forumThreadRepository;
 
   public List<Post> getAllPostsByThreadId(Long forumThreadId) {
@@ -26,17 +26,25 @@ public class PostService {
   }
 
   public Post createPost(Post post) {
+
     ForumThread forumThread = forumThreadRepository.findById(post.getThread().getForumThreadId())
-        .orElseThrow(() -> new IllegalArgumentException("Thread not found"));
+        .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
     post.setThread(forumThread);
     post.setPostCreatedAt(LocalDateTime.now());
     post.setPostLastUpdatedAt(LocalDateTime.now());
-    return postRepository.save(post);
+
+    Post savedPost = postRepository.save(post);
+
+    forumThread.setComments(forumThread.getComments() + 1);
+    forumThreadRepository.save(forumThread);
+
+    return savedPost;
   }
 
   public boolean deletePost(Long postId) {
     Optional<Post> optionalPost = postRepository.findById(postId);
-    if(optionalPost.isPresent()){
+    if (optionalPost.isPresent()) {
       postRepository.delete(optionalPost.get());
       return true;
     }

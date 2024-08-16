@@ -23,6 +23,8 @@ public class ForumThread {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long forumThreadId;
 
+  private int comments;
+
   private String title;
 
   private String content;
