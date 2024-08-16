@@ -13,26 +13,30 @@ const HomePage = () => {
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState("");
 
+  useEffect(() => {
+    fetchThreads();
+  }, []);
+
   const fetchThreads = async () => {
     try {
-        const response = await fetch("http://localhost:8080/threads", {
-            credentials: "include",
-        });
+      const response = await fetch("http://localhost:8080/threads", {
+        credentials: "include",
+      });
 
-        const textResponse = await response.text(); 
-        console.log("Raw response:", textResponse); 
+      const textResponse = await response.text();
+      console.log("Raw response:", textResponse);
 
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-            const data = JSON.parse(textResponse); 
-            setThreads(data);
-        } else {
-            throw new Error("Expected JSON, got something else");
-        }
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const data = JSON.parse(textResponse);
+        setThreads(data);
+      } else {
+        throw new Error("Expected JSON, got something else");
+      }
     } catch (error) {
-        console.error("Error fetching threads:", error);
+      console.error("Error fetching threads:", error);
     }
-};
+  };
 
   const handleToggleForm = () => {
     setShowForm(!showForm);
@@ -40,48 +44,48 @@ const HomePage = () => {
 
   const handleThreadClick = (thread) => {
     setSelectedThread(thread);
-    fetchComments(thread.id);  
+    fetchComments(thread.forumThreadId);
   };
 
   const handleCreateThread = async (e) => {
     e.preventDefault();
 
     try {
-        const response = await fetch(`http://localhost:8080/threads`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ title, content }),
-            credentials: "include",
-        });
+      const response = await fetch(`http://localhost:8080/threads`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title, content }),
+        credentials: "include",
+      });
 
-        const textResponse = await response.text(); 
-        console.log("Raw response:", textResponse); 
+      const textResponse = await response.text();
+      console.log("Raw response:", textResponse);
 
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-            const newThread = JSON.parse(textResponse); 
-            setThreads([newThread, ...threads]);
-            setSuccessMessage("Post created successfully!");
-            setTitle("");
-            setContent("");
-            fetchThreads(threads);
-            setShowForm(false);
-        } else {
-            throw new Error("Expected JSON, got something else");
-        }
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const newThread = JSON.parse(textResponse);
+        setThreads([newThread, ...threads]);
+        setTitle("");
+        setContent("");
+        setShowForm(false);
+      } else {
+        throw new Error("Expected JSON, got something else");
+      }
     } catch (error) {
-        console.error("Error creating post:", error);
+      console.error("Error creating post:", error);
     }
-};
-
+  };
 
   const fetchComments = async (threadId) => {
     try {
-      const response = await fetch(`http://localhost:8080/posts/thread/${threadId}`, {
-        credentials: "include",
-      });
+      const response = await fetch(
+        `http://localhost:8080/posts/thread/${threadId}`,
+        {
+          credentials: "include",
+        }
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -108,7 +112,9 @@ const HomePage = () => {
         },
         body: JSON.stringify({
           postContent: commentContent,
-          thread: selectedThread,
+          thread: {
+            forumThreadId: selectedThread.forumThreadId,
+          },
         }),
         credentials: "include",
       });
@@ -121,8 +127,15 @@ const HomePage = () => {
       if (contentType && contentType.includes("application/json")) {
         const newComment = await response.json();
         setComments([newComment, ...comments]);
-        fetchComments(comments);
         setCommentContent("");
+
+        setThreads((prevThreads) =>
+          prevThreads.map((thread) =>
+            thread.forumThreadId === selectedThread.forumThreadId
+              ? { ...thread, comments: thread.comments + 1 }
+              : thread
+          )
+        );
       } else {
         throw new Error("Expected JSON, got something else");
       }
@@ -131,22 +144,17 @@ const HomePage = () => {
     }
   };
 
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
-
-  if (!user) {
-    return <div className="loading-message">Loading...</div>;
-  }
-
   return (
     <div className="home-container">
       <div className="home-content">
-        <h2 className="home-header">Home</h2>
+        <div className="home-header">
+          <h2>Home</h2>
+        </div>
         <div className="home-message">
-        <p>
-          Hello, {user?.firstName ? user.firstName : "Guest"}! What would you like to do?
-        </p>
+          <p>
+            Hello, {user?.firstName ? user.firstName : "Guest"}! What would you
+            like to do?
+          </p>
         </div>
         <button onClick={handleToggleForm} className="create-thread-button">
           {showForm ? "Cancel" : "Create Post"}
@@ -156,7 +164,7 @@ const HomePage = () => {
           <form onSubmit={handleCreateThread} className="thread-form">
             <h2 className="create-thread-title">Create Post</h2>
             <label className="thread-input">
-              Title: 
+              Title:
               <input
                 type="text"
                 value={title}
@@ -183,42 +191,54 @@ const HomePage = () => {
           <div className="success-message">{successMessage}</div>
         )}
 
-        <div className="thread-list">
-          <h3>Recent Threads</h3>
-          {threads.map((thread) => (
-            <div
-              key={thread.id}
-              className="thread-item"
-              onClick={() => handleThreadClick(thread)}
-            >
-              <h4>{thread.title}</h4>
-              <p>{thread.content}</p>
-            </div>
-          ))}
-        </div>
+        {threads.length > 0 && (
+          <div className="thread-list">
+            <h3>Recent Posts:</h3>
+            {threads.map((thread) => (
+              <div
+                key={thread.forumThreadId}
+                className="thread-item"
+                onClick={() => handleThreadClick(thread)}
+              >
+                <h4 className="thread-title">{thread.title}</h4>
+                <p className="thread-created-at">{thread.createdAt}</p>
+                <p className="thread-content">{thread.content}</p>
+                <p className="thread-comments">Comments: {thread.comments}</p>
 
-        {selectedThread && (
-          <div className="thread-details">
-            <h3 className="comments-header">Comments:</h3>
-            <div className="comment-list">
-              {comments.map((comment) => (
-                <div key={comment.postId} className="comment-item">
-                  <p>{comment.postContent}</p>
-                  <p>{user.username}</p>
-                </div>
-              ))}
-            </div>
-            <form onSubmit={handleCreateComment} className="comment-form">
-              <textarea
-                value={commentContent}
-                onChange={(e) => setCommentContent(e.target.value)}
-                required
-                placeholder="Add a comment..."
-              ></textarea>
-              <button type="submit" className="create-comment-button">
-                Comment
-              </button>
-            </form>
+                {selectedThread?.forumThreadId === thread.forumThreadId && (
+                  <div className="thread-details">
+                    <h3 className="comments-header">Comments:</h3>
+                    <div className="comment-list">
+                      {comments.map((comment) => (
+                        <div key={comment.postId} className="comment-item">
+                          <p>{comment.postContent}</p>
+                          <div className="comment-username">
+                            <p>{user.username}</p>
+                          </div>
+                          <p className="comment-created-at">
+                            {comment.postCreatedAt}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <form
+                      onSubmit={handleCreateComment}
+                      className="comment-form"
+                    >
+                      <textarea
+                        value={commentContent}
+                        onChange={(e) => setCommentContent(e.target.value)}
+                        required
+                        placeholder="Add a comment..."
+                      ></textarea>
+                      <button type="submit" className="create-comment-button">
+                        Comment
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
