@@ -2,11 +2,14 @@ package com.example.socialMediaForum.service;
 
 import com.example.socialMediaForum.model.ForumThread;
 import com.example.socialMediaForum.model.Post;
+import com.example.socialMediaForum.model.User;
 import com.example.socialMediaForum.repositories.ForumThreadRepository;
 import com.example.socialMediaForum.repositories.PostRepository;
-
+import com.example.socialMediaForum.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,16 +24,25 @@ public class PostService {
   @Autowired
   private ForumThreadRepository forumThreadRepository;
 
+  @Autowired
+  private UserRepository userRepository;
+
   public List<Post> getAllPostsByThreadId(Long forumThreadId) {
     return postRepository.findByThread_ForumThreadId(forumThreadId);
   }
 
-  public Post createPost(Post post) {
+  public Post createPost(@RequestBody Post post, @RequestParam String username) {
 
     ForumThread forumThread = forumThreadRepository.findById(post.getThread().getForumThreadId())
-        .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        .orElseThrow(() -> new IllegalArgumentException("Thread not found"));
+
+    User user = userRepository.findByUsername(username);
+    if (user == null) {
+      throw new IllegalArgumentException("User not found");
+    }
 
     post.setThread(forumThread);
+    post.setUser(user);
     post.setPostCreatedAt(LocalDateTime.now());
     post.setPostLastUpdatedAt(LocalDateTime.now());
 
@@ -68,6 +80,8 @@ public class PostService {
   }
 
   public Post save(Post post) {
+    post.setPostCreatedAt(LocalDateTime.now());
+    post.setPostLastUpdatedAt(LocalDateTime.now());
     return postRepository.save(post);
   }
 }

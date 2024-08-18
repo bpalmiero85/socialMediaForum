@@ -46,7 +46,7 @@ public class User {
 
     @NotBlank(message = "Username is mandatory")
     @Size(min = 3, max = 16, message = "Username must be between 3 and 16 characters")
-    private String username;
+    public String username;
 
     @NotBlank(message = "Password is mandatory")
     @Size(min = 6, message = "Password must be at least 6 characters")

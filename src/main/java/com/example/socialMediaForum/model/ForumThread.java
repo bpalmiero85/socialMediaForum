@@ -6,6 +6,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,6 +25,10 @@ public class ForumThread {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long forumThreadId;
 
+  @ManyToOne
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
+
   private int comments;
 
   private String title;
@@ -36,6 +42,5 @@ public class ForumThread {
   @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference
   private List<Post> posts;
-
 
 }

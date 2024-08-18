@@ -26,8 +26,8 @@ public class ForumThreadController {
 
   @GetMapping(produces = "application/json")
   public ResponseEntity<List<ForumThread>> getAllThreads() {
-      List<ForumThread> threads = threadService.getAllThreads();
-      return ResponseEntity.ok().body(threads);
+    List<ForumThread> threads = threadService.getAllThreads();
+    return ResponseEntity.ok().body(threads);
   }
 
   @GetMapping("/{forumThreadId}")
@@ -42,18 +42,17 @@ public class ForumThreadController {
   @PostMapping(produces = "application/json")
   public ResponseEntity<?> createThread(@RequestBody ForumThread forumThread) {
     try {
-        if (forumThread == null || forumThread.getTitle() == null || forumThread.getContent() == null) {
-            return ResponseEntity.badRequest().body("Title and content must be provided");
-        }
-        ForumThread savedThread = threadService.save(forumThread);
-        return ResponseEntity.ok(savedThread);
+      if (forumThread == null || forumThread.getTitle() == null || forumThread.getContent() == null) {
+        return ResponseEntity.badRequest().body("Title and content must be provided");
+      }
+      ForumThread savedThread = threadService.save(forumThread);
+      return ResponseEntity.ok(savedThread);
     } catch (IllegalArgumentException e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
+      return ResponseEntity.badRequest().body(e.getMessage());
     } catch (Exception e) {
-        return ResponseEntity.status(500).body("An internal server error occurred.");
+      return ResponseEntity.status(500).body("An internal server error occurred.");
     }
   }
-  
 
   @PutMapping("/{forumThreadId}")
   public ResponseEntity<ForumThread> updateThread(@PathVariable Long forumThreadId,
@@ -74,5 +73,3 @@ public class ForumThreadController {
     return ResponseEntity.noContent().build();
   }
 }
-
-

@@ -56,7 +56,7 @@ const HomePage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ title, content, user }),
         credentials: "include",
       });
 
@@ -105,19 +105,20 @@ const HomePage = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch(`http://localhost:8080/posts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          postContent: commentContent,
-          thread: {
-            forumThreadId: selectedThread.forumThreadId,
+      const response = await fetch(
+        `http://localhost:8080/posts?username=${user.username}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        }),
-        credentials: "include",
-      });
+          body: JSON.stringify({
+            postContent: commentContent,
+            thread: { forumThreadId: selectedThread.forumThreadId },
+          }),
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -201,6 +202,7 @@ const HomePage = () => {
                 onClick={() => handleThreadClick(thread)}
               >
                 <h4 className="thread-title">{thread.title}</h4>
+                <p className="thread-username">{thread.user?.username}</p>
                 <p className="thread-created-at">{thread.createdAt}</p>
                 <p className="thread-content">{thread.content}</p>
                 <p className="thread-comments">Comments: {thread.comments}</p>
@@ -213,7 +215,7 @@ const HomePage = () => {
                         <div key={comment.postId} className="comment-item">
                           <p>{comment.postContent}</p>
                           <div className="comment-username">
-                            <p>{user.username}</p>
+                            <p>{comment.user?.username}</p>
                           </div>
                           <p className="comment-created-at">
                             {comment.postCreatedAt}

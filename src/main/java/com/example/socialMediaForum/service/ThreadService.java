@@ -8,12 +8,17 @@ import java.util.List;
 import java.util.Optional;
 
 import com.example.socialMediaForum.model.ForumThread;
+import com.example.socialMediaForum.model.User;
 import com.example.socialMediaForum.repositories.ForumThreadRepository;
+import com.example.socialMediaForum.repositories.UserRepository;
 
 @Service
 public class ThreadService {
   @Autowired
   private ForumThreadRepository forumThreadRepository;
+
+  @Autowired
+  private UserRepository userRepository;
 
   public List<ForumThread> getAllThreads() {
     return forumThreadRepository.findAll();
@@ -28,7 +33,9 @@ public class ThreadService {
     return false;
   }
 
-  public ForumThread createThread(ForumThread forumThread) {
+  public ForumThread createThread(ForumThread forumThread, String username) {
+    User user = userRepository.findByUsername(username);
+    forumThread.setUser(user);
     forumThread.setCreatedAt(LocalDateTime.now());
     return forumThreadRepository.save(forumThread);
   }

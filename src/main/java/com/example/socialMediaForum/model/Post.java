@@ -23,6 +23,10 @@ public class Post {
   private Long postId;
 
   @ManyToOne
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
+
+  @ManyToOne
   @JoinColumn(name = "forum_thread_id", nullable = false)
   @JsonBackReference
   private ForumThread thread;
