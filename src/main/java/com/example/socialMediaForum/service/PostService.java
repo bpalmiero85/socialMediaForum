@@ -22,7 +22,7 @@ public class PostService {
   private ForumThreadRepository forumThreadRepository;
 
   public List<Post> getAllPostsByThreadId(Long forumThreadId) {
-    return postRepository.findByThreadId(forumThreadId);
+    return postRepository.findByThread_ForumThreadId(forumThreadId);
   }
 
   public Post createPost(Post post) {
