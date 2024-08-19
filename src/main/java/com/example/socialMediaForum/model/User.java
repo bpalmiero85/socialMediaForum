@@ -51,4 +51,7 @@ public class User {
     @NotBlank(message = "Password is mandatory")
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
+
+    @Column(name = "profile_picture")
+    private String profilePicture; 
 }
