@@ -1,14 +1,27 @@
 package com.example.socialMediaForum.controller;
 
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.socialMediaForum.model.User;
+import com.example.socialMediaForum.service.FileStorageService;
 import com.example.socialMediaForum.service.SessionTrackingService;
 import com.example.socialMediaForum.service.UserServiceImpl;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
@@ -27,6 +40,9 @@ public class UserController {
 
     @Autowired
     private SessionTrackingService sessionTrackingService;
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     @PostMapping("/register")
     public ResponseEntity<String> signup(HttpServletRequest request, @RequestBody User user)
@@ -55,6 +71,37 @@ public class UserController {
             return ResponseEntity.ok("Please check your email to verify your account.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("An internal server error occurred.");
+        }
+    }
+
+    @PostMapping("/uploadProfilePicture")
+    public ResponseEntity<Map<String, String>> uploadProfilePicture(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("username") String username) {
+        try {
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "File is missing"));
+            }
+
+            User user = userServiceImpl.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+            }
+
+            String fileName = UUID.randomUUID().toString() + "-" + file.getOriginalFilename();
+            String filePath = fileStorageService.getUploadDir() + fileName;
+            file.transferTo(new File(filePath));
+
+            user.setProfilePicture(fileName);
+            userServiceImpl.save(user);
+
+            return ResponseEntity.ok(Map.of("profilePicture", fileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "File upload failed: " + e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Server error: " + e.getMessage()));
         }
     }
 

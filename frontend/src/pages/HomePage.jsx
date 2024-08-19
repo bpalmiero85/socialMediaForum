@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/HomePage.css";
 import useFetchUser from "../components/FetchUser";
+import ProfilePicture from "../components/ProfilePicture";
 
 const HomePage = () => {
   const { user, error } = useFetchUser();
@@ -157,6 +158,10 @@ const HomePage = () => {
             like to do?
           </p>
         </div>
+        
+       
+        <ProfilePicture />
+
         <button onClick={handleToggleForm} className="create-thread-button">
           {showForm ? "Cancel" : "Create Post"}
         </button>

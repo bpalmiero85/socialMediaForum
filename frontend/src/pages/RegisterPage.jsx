@@ -8,6 +8,7 @@ const RegisterPage = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [profilePic, setProfilePic] = useState([]);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
   const navigate = useNavigate();
@@ -53,7 +54,6 @@ const RegisterPage = () => {
 
       if (response.ok) {
         navigate(`/verify?username=${username}`);
-    
       } else {
         const errorText = await response.text();
         setServerError(errorText);
@@ -100,7 +100,9 @@ const RegisterPage = () => {
               />
               <div className="register-error-message-container">
                 {errors.lastName && (
-                  <div className="register-error-message">{errors.lastName}</div>
+                  <div className="register-error-message">
+                    {errors.lastName}
+                  </div>
                 )}
               </div>
             </div>
@@ -145,7 +147,9 @@ const RegisterPage = () => {
               />
               <div className="register-error-message-container">
                 {errors.password && (
-                  <div className="register-error-message">{errors.password}</div>
+                  <div className="register-error-message">
+                    {errors.password}
+                  </div>
                 )}
               </div>
             </div>

@@ -46,7 +46,7 @@ function Navbar() {
             <Link
               to={
                 user.username
-                  ? `/homepage?username=${user.username}`
+                  ? `/homepage?username=${user.username}&profilePicture=${user.profilePicture}`
                   : "/register"
               }
             >
@@ -72,7 +72,7 @@ function Navbar() {
             <Link
               to={
                 user.username
-                  ? `/homepage?username=${user.username}`
+                  ? `/homepage?username=${user.username}&profilePicture=${user.profilePicture}`
                   : "/register"
               }
             >
@@ -104,7 +104,7 @@ function Navbar() {
             <Link
               to={
                 user.username
-                  ? `/homepage?username=${user.username}`
+                  ? `/homepage?username=${user.username}&profilePicture=${user.profilePicture}`
                   : "/register"
               }
             >

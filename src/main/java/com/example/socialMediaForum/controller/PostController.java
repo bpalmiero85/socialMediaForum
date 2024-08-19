@@ -1,7 +1,6 @@
 package com.example.socialMediaForum.controller;
 
 import com.example.socialMediaForum.model.Post;
-import com.example.socialMediaForum.model.User;
 import com.example.socialMediaForum.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
