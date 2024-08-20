@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import useFetchUser from "./FetchUser";
 
 const ProfilePicture = () => {
   const { user, error, setUser } = useFetchUser();
   const [selectedFile, setSelectedFile] = useState(null);
   const [profilePicture, setProfilePicture] = useState(user?.profilePicture || null);
+  const navigate = useNavigate();
 
   const handleFileChange = (e) => {
     if(e.target.files.length > 0){
@@ -45,6 +47,7 @@ const ProfilePicture = () => {
 
       
       setProfilePicture(data.profilePicture);
+      navigate(`/homepage?username=${user.username}&file=${data.profilePicture}`)
     } catch (error) {
       console.error("Error uploading profile picture:", error);
     }
@@ -58,10 +61,10 @@ const ProfilePicture = () => {
           <div className="profile-picture">
             {profilePicture ? (
               <img
-                src={``}
-                alt="Profile"
+                src={`/static/uploads/${profilePicture}`}
+                alt="Profile Picture"
                 className="profile-picture"
-                style={{ width: "350px", height: "350px", objectFit: "cover" }}
+                
               />
             ) : (
               <p>No profile picture uploaded</p>

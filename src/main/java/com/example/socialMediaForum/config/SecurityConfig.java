@@ -30,7 +30,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:/Users/brianpalmiero/Desktop/socialMediaForum/frontend/uploads");
+                .addResourceLocations("file:/Users/brianpalmiero/Desktop/socialMediaForum/static/uploads");
     }
 
     @Bean
@@ -74,6 +74,8 @@ public class WebConfig implements WebMvcConfigurer {
                     .antMatchers(HttpMethod.PUT, "/posts/**").permitAll()
                     .antMatchers(HttpMethod.DELETE, "/posts/**").permitAll()
                     .antMatchers("/h2-console/**").permitAll()
+                    .antMatchers("/uploads/**").permitAll()
+
                     .anyRequest().authenticated()
                     .and()
                     .formLogin()

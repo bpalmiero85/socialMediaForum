@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/HomePage.css";
 import useFetchUser from "../components/FetchUser";
 import ProfilePicture from "../components/ProfilePicture";
+import { useLocation } from "react-router-dom";
 
 const HomePage = () => {
   const { user, error } = useFetchUser();
@@ -13,6 +14,10 @@ const HomePage = () => {
   const [selectedThread, setSelectedThread] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState("");
+
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const profilePicture = searchParams.get("file")
 
   useEffect(() => {
     fetchThreads();
@@ -160,7 +165,7 @@ const HomePage = () => {
         </div>
         
        
-        <ProfilePicture />
+        <ProfilePicture initialProfilePicture={profilePicture} />
 
         <button onClick={handleToggleForm} className="create-thread-button">
           {showForm ? "Cancel" : "Create Post"}
