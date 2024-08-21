@@ -10,14 +10,15 @@ const HomePage = () => {
   const [content, setContent] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showUploadPic, setShowUploadPic] = useState(false);
   const [threads, setThreads] = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState("");
+  const [isPictureUploaded, setIsPictureUploaded] = useState(false);
 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const profilePicture = searchParams.get("file")
 
   useEffect(() => {
     fetchThreads();
@@ -44,8 +45,17 @@ const HomePage = () => {
     }
   };
 
+  const handleIsUploaded = () => {
+    setIsPictureUploaded(true);
+    setShowUploadPic(false);
+  };
+
   const handleToggleForm = () => {
     setShowForm(!showForm);
+  };
+
+  const handleToggleUpload = () => {
+    setShowUploadPic(!showUploadPic);
   };
 
   const handleThreadClick = (thread) => {
@@ -163,14 +173,14 @@ const HomePage = () => {
             like to do?
           </p>
         </div>
+        <button onClick={handleToggleUpload} className="upload-pic-button">
+          {isPictureUploaded ? "Update Profile Picture" : "Upload Profile Picture"}
+        </button>
         
-       
-        <ProfilePicture initialProfilePicture={profilePicture} />
-
+        {showUploadPic && <ProfilePicture />};
         <button onClick={handleToggleForm} className="create-thread-button">
           {showForm ? "Cancel" : "Create Post"}
         </button>
-
         {showForm && (
           <form onSubmit={handleCreateThread} className="thread-form">
             <h2 className="create-thread-title">Create Post</h2>
@@ -197,11 +207,9 @@ const HomePage = () => {
             </button>
           </form>
         )}
-
         {successMessage && (
           <div className="success-message">{successMessage}</div>
         )}
-
         {threads.length > 0 && (
           <div className="thread-list">
             <h3>Recent Posts:</h3>

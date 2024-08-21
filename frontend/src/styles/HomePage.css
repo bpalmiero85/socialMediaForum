@@ -230,8 +230,8 @@ body {
 }
 
 .profile-picture {
-  width: 350px;
-  height: 350px;
+  width: 250px;
+  height: 250px;
   border: 2px solid #ccc;
   justify-content: center;
   align-items: center;
