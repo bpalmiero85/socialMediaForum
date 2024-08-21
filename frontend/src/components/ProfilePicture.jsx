@@ -64,7 +64,7 @@ const ProfilePicture = () => {
           <div className="profile-picture">
             {profilePicture ? (
               <img
-                src={`/static/uploads/${profilePicture}`}
+                src={`http://localhost:8080/uploads/${profilePicture}`}
                 alt="Profile Picture"
                 className="profile-picture"
               />
