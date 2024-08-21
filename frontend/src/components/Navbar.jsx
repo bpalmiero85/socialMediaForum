@@ -46,7 +46,7 @@ function Navbar() {
             <Link
               to={
                 user.username
-                  ? `/homepage?username=${user.username}&profilePicture=${user.profilePicture}`
+                  ? `/homepage?username=${user.username}&file=${data.profilePicture}`
                   : "/register"
               }
             >
@@ -72,7 +72,7 @@ function Navbar() {
             <Link
               to={
                 user.username
-                  ? `/homepage?username=${user.username}&profilePicture=${user.profilePicture}`
+                  ? `/homepage?username=${user.username}&file=${data.profilePicture}`
                   : "/register"
               }
             >
@@ -92,19 +92,19 @@ function Navbar() {
             <Link to="/">Sign In</Link>
           </div>
         );
-        case "/verify":
+      case "/verify":
         return (
           <div className="links-container">
             <Link to="/">Sign In</Link>
           </div>
         );
-        case "/threads":
+      case "/threads":
         return (
           <div className="links-container">
             <Link
               to={
                 user.username
-                  ? `/homepage?username=${user.username}&profilePicture=${user.profilePicture}`
+                  ? `/homepage?username=${user.username}&file=${data.profilePicture}`
                   : "/register"
               }
             >
