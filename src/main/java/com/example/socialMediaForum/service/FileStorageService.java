@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class FileStorageService {
-  private final String uploadDir = "uploads/";
+  private final String uploadDir = "static/uploads/";
 
   @PostConstruct
   public void init() {
