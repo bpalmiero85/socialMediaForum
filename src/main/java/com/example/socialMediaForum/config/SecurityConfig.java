@@ -25,64 +25,65 @@ public class SecurityConfig {
     }
 
     @Configuration
-public class WebConfig implements WebMvcConfigurer {
+    public class WebConfig implements WebMvcConfigurer {
 
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:/Users/brianpalmiero/Desktop/socialMediaForum/static/uploads");
-    }
-
-    @Bean
-    public CorsFilter corsFilter() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:3000");
-        config.addAllowedHeader("*");
-        config.addAllowedMethod(HttpMethod.GET);
-        config.addAllowedMethod(HttpMethod.POST);
-        config.addAllowedMethod(HttpMethod.DELETE);
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
-    }
-
-    @Configuration
-    public class FileUploadConfig {
-        @Bean
-        public CommonsMultipartResolver multipartResolver() {
-            CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
-            multipartResolver.setMaxUploadSize(10485760); 
-            return multipartResolver;
+        @Override
+        public void addResourceHandlers(ResourceHandlerRegistry registry) {
+            registry.addResourceHandler("/uploads/**")
+                    .addResourceLocations(
+                            "file:/Users/brianpalmiero/Desktop/socialMediaForum/frontend/public/uploads/");
         }
 
         @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            http
-                    .cors().and()
-                    .csrf().disable()
-                    .authorizeRequests()
-                    .antMatchers(HttpMethod.POST, "/user/**").permitAll()
-                    .antMatchers(HttpMethod.GET, "/user/**").permitAll()
-                    .antMatchers(HttpMethod.DELETE, "/user/**").permitAll()
-                    .antMatchers(HttpMethod.GET, "/threads/**").permitAll()
-                    .antMatchers(HttpMethod.POST, "/threads/**").permitAll()
-                    .antMatchers(HttpMethod.PUT, "/threads/**").permitAll()
-                    .antMatchers(HttpMethod.DELETE, "/threads/**").permitAll()
-                    .antMatchers(HttpMethod.GET, "/posts/**").permitAll()
-                    .antMatchers(HttpMethod.POST, "/posts/**").permitAll()
-                    .antMatchers(HttpMethod.PUT, "/posts/**").permitAll()
-                    .antMatchers(HttpMethod.DELETE, "/posts/**").permitAll()
-                    .antMatchers("/h2-console/**").permitAll()
-                    .antMatchers("/uploads/**").permitAll()
-                    .anyRequest().authenticated()
-                    .and()
-                    .formLogin()
-                    .and()
-                    .headers().frameOptions().sameOrigin();
+        public CorsFilter corsFilter() {
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            CorsConfiguration config = new CorsConfiguration();
+            config.setAllowCredentials(true);
+            config.addAllowedOrigin("http://localhost:3000");
+            config.addAllowedHeader("*");
+            config.addAllowedMethod(HttpMethod.GET);
+            config.addAllowedMethod(HttpMethod.POST);
+            config.addAllowedMethod(HttpMethod.DELETE);
+            source.registerCorsConfiguration("/**", config);
+            return new CorsFilter(source);
+        }
 
-            return http.build();
+        @Configuration
+        public class FileUploadConfig {
+            @Bean
+            public CommonsMultipartResolver multipartResolver() {
+                CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
+                multipartResolver.setMaxUploadSize(10485760);
+                return multipartResolver;
+            }
+
+            @Bean
+            public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                        .cors().and()
+                        .csrf().disable()
+                        .authorizeRequests()
+                        .antMatchers(HttpMethod.POST, "/user/**").permitAll()
+                        .antMatchers(HttpMethod.GET, "/user/**").permitAll()
+                        .antMatchers(HttpMethod.DELETE, "/user/**").permitAll()
+                        .antMatchers(HttpMethod.GET, "/threads/**").permitAll()
+                        .antMatchers(HttpMethod.POST, "/threads/**").permitAll()
+                        .antMatchers(HttpMethod.PUT, "/threads/**").permitAll()
+                        .antMatchers(HttpMethod.DELETE, "/threads/**").permitAll()
+                        .antMatchers(HttpMethod.GET, "/posts/**").permitAll()
+                        .antMatchers(HttpMethod.POST, "/posts/**").permitAll()
+                        .antMatchers(HttpMethod.PUT, "/posts/**").permitAll()
+                        .antMatchers(HttpMethod.DELETE, "/posts/**").permitAll()
+                        .antMatchers("/h2-console/**").permitAll()
+                        .antMatchers("/uploads/**").permitAll()
+                        .anyRequest().authenticated()
+                        .and()
+                        .formLogin()
+                        .and()
+                        .headers().frameOptions().sameOrigin();
+
+                return http.build();
+            }
         }
     }
-}
 }
