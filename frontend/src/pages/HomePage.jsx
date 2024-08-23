@@ -6,6 +6,7 @@ import { useLocation } from "react-router-dom";
 
 const HomePage = () => {
   const { user, error } = useFetchUser();
+  const [isPictureUploaded, setIsPictureUploaded] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -15,10 +16,6 @@ const HomePage = () => {
   const [selectedThread, setSelectedThread] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState("");
-  const [isPictureUploaded, setIsPictureUploaded] = useState(false);
-
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
 
   useEffect(() => {
     fetchThreads();
@@ -45,17 +42,17 @@ const HomePage = () => {
     }
   };
 
-  const handleIsUploaded = () => {
-    setIsPictureUploaded(true);
-    setShowUploadPic(false);
-  };
-
   const handleToggleForm = () => {
     setShowForm(!showForm);
   };
 
   const handleToggleUpload = () => {
-    setShowUploadPic(!showUploadPic);
+    setShowUploadPic(true);
+  };
+
+  const handlePictureUpload = () => {
+    setIsPictureUploaded(true);
+    setShowUploadPic(true);
   };
 
   const handleThreadClick = (thread) => {
@@ -173,11 +170,13 @@ const HomePage = () => {
             like to do?
           </p>
         </div>
-        <button onClick={handleToggleUpload} className="upload-pic-button">
-          {isPictureUploaded ? "Update Profile Picture" : "Upload Profile Picture"}
-        </button>
-        
-        {showUploadPic && <ProfilePicture />};
+        {!isPictureUploaded && (
+          <button onClick={handleToggleUpload} className="upload-pic-button">
+            Upload Profile Picture
+          </button>
+        )}
+
+        {showUploadPic && <ProfilePicture onUpload={handlePictureUpload} />}
         <button onClick={handleToggleForm} className="create-thread-button">
           {showForm ? "Cancel" : "Create Post"}
         </button>
