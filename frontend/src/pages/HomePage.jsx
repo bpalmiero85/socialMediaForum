@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/HomePage.css";
 import useFetchUser from "../components/FetchUser";
 import ProfilePicture from "../components/ProfilePicture";
+import ScrollAnimation from "react-animate-on-scroll";
 import { useLocation } from "react-router-dom";
 
 const HomePage = () => {
@@ -114,6 +115,22 @@ const HomePage = () => {
     }
   };
 
+  const spans = document.querySelectorAll(".home-header span");
+
+  spans.forEach((span, idx) => {
+    span.addEventListener("click", (e) => {
+      e.target.classList.add("active");
+    });
+    span.addEventListener("animationend", (e) => {
+      e.target.classList.remove("active");
+    });
+
+    // Initial animation
+    setTimeout(() => {
+      span.classList.add("active");
+    }, 750 * (idx + 1));
+  });
+
   const handleCreateComment = async (e) => {
     e.preventDefault();
 
@@ -162,12 +179,20 @@ const HomePage = () => {
     <div className="home-container">
       <div className="home-content">
         <div className="home-header">
-          <h2>Home</h2>
+          <ScrollAnimation animateIn="fadeIn">
+            <span>H</span>
+            <span>O</span>
+            <span>M</span>
+            <span>E</span>
+          </ScrollAnimation>
         </div>
+
         <div className="home-message">
           <p>
-            Hello, {user?.firstName ? user.firstName : "Guest"}! What would you
-            like to do?
+            <ScrollAnimation animateIn="bounceIn">
+              Hello, {user?.firstName ? user.firstName : "Guest"}! What would
+              you like to do?
+            </ScrollAnimation>
           </p>
         </div>
         {!isPictureUploaded && (
@@ -212,6 +237,7 @@ const HomePage = () => {
         {threads.length > 0 && (
           <div className="thread-list">
             <h3>Recent Posts:</h3>
+
             {threads.map((thread) => (
               <div
                 key={thread.forumThreadId}
@@ -219,7 +245,7 @@ const HomePage = () => {
                 onClick={() => handleThreadClick(thread)}
               >
                 <h4 className="thread-title">{thread.title}</h4>
-                <p className="thread-username">{thread.user?.username}</p>
+                <p className="thread-username">{showUploadPic ? user.profilePicture : ""} {thread.user?.username}</p>
                 <p className="thread-created-at">{thread.createdAt}</p>
                 <p className="thread-content">{thread.content}</p>
                 <p className="thread-comments">Comments: {thread.comments}</p>
@@ -234,6 +260,7 @@ const HomePage = () => {
                           <div className="comment-username">
                             <p>{comment.user?.username}</p>
                           </div>
+
                           <p className="comment-created-at">
                             {comment.postCreatedAt}
                           </p>

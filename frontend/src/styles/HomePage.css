@@ -38,14 +38,6 @@ body {
   border-radius: 8px;
 }
 
-.home-header {
-  display: flex;
-  justify-content: center;
-  font-size: 2rem;
-  margin-bottom: 20px;
-  color: #333;
-}
-
 .home-message {
   font-size: 1.2rem;
   text-align: center;
@@ -293,6 +285,79 @@ body {
   display: block;
   padding-top: 50%;
 }
+
+.home-header {
+  margin-top: 50px;
+  font-family: "Lucida Console", "Courier New", monospace;
+  perspective: 1000px; 
+}
+
+.home-header span {
+  cursor: pointer;
+  display: inline-block;
+  font-size: 100px;
+  background-color: transparent;
+  user-select: none;
+  line-height: .8;
+ 
+}
+
+.home-header span:nth-child(1).active {
+  animation: shrinkjump 1s ease-in-out;
+  transform-origin: bottom center;
+}
+
+.home-header span:nth-child(2).active {
+  animation: shrinkjump 1s ease-in-out;
+  transform-origin: bottom center;
+}
+
+@keyframes shrinkjump {
+  10%, 35% {
+    transform: scale(1, .9) translate(0, 0);
+  }
+  
+  45%, 50% {
+    transform: scale(1) translate(0, -100px);
+  }
+  
+  80% {
+    transform: scale(1) translate(0, 0);
+  }
+}
+
+.home-header span:nth-child(3).active {
+  animation: shrinkjump 1s ease-in-out;
+  transform-origin: bottom center;
+}
+
+.home-header span:nth-child(4).active {
+  animation: rotate 1s ease-in-out;
+  transform-origin: bottom center;
+}
+
+@keyframes rotate {
+  20%, 80% {
+    transform: rotateY(180deg);
+  }
+  
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+.home-header span:nth-child(5).active {
+  animation: shrinkjump 1s ease-in-out;
+  transform-origin: bottom center;
+}
+
+
+
+
+
+
+
+
 
 
 
