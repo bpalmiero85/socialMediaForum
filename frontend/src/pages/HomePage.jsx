@@ -202,9 +202,6 @@ const HomePage = () => {
         )}
 
         {showUploadPic && <ProfilePicture onUpload={handlePictureUpload} />}
-        <button onClick={handleToggleForm} className="create-thread-button">
-          {showForm ? "Cancel" : "Create Post"}
-        </button>
         {showForm && (
           <form onSubmit={handleCreateThread} className="thread-form">
             <h2 className="create-thread-title">Create Post</h2>
@@ -234,6 +231,30 @@ const HomePage = () => {
         {successMessage && (
           <div className="success-message">{successMessage}</div>
         )}
+        {!showForm && !isPictureUploaded ? (
+          <button onClick={handleToggleForm} className="create-thread-button">
+            Create Post
+          </button>
+        ) : (
+          ""
+        )}
+
+        {!showForm && isPictureUploaded ? (
+          <button
+            onClick={handleToggleForm}
+            className="create-thread-button-after"
+          >
+            Create Post
+          </button>
+        ) : (
+          ""
+        )}
+
+        {showForm && (
+          <button onClick={handleToggleForm} className="cancel-thread-button">
+            Cancel
+          </button>
+        )}
         {threads.length > 0 && (
           <div className="thread-list">
             <h3>Recent Posts:</h3>
@@ -245,7 +266,10 @@ const HomePage = () => {
                 onClick={() => handleThreadClick(thread)}
               >
                 <h4 className="thread-title">{thread.title}</h4>
-                <p className="thread-username">{showUploadPic ? user.profilePicture : ""} {thread.user?.username}</p>
+                <p className="thread-username">
+                  {showUploadPic ? user.profilePicture : ""}{" "}
+                  {thread.user?.username}
+                </p>
                 <p className="thread-created-at">{thread.createdAt}</p>
                 <p className="thread-content">{thread.content}</p>
                 <p className="thread-comments">Comments: {thread.comments}</p>
