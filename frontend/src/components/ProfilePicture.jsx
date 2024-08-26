@@ -1,14 +1,15 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useFetchUser from "./FetchUser";
 import Cropper from "react-easy-crop";
+
 
 const createImage = (url) =>
   new Promise((resolve, reject) => {
     const image = new Image();
     image.addEventListener("load", () => resolve(image));
     image.addEventListener("error", (error) => reject(error));
-    image.setAttribute("crossOrigin", "anonymous"); 
+    image.setAttribute("crossOrigin", "anonymous");
     image.src = url;
   });
 
@@ -21,6 +22,7 @@ const getCroppedImg = async (imageSrc, crop) => {
   canvas.height = crop.height;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
 
   ctx.beginPath();
   ctx.arc(crop.width / 2, crop.height / 2, crop.width / 2, 0, 2 * Math.PI);
@@ -49,18 +51,17 @@ const getCroppedImg = async (imageSrc, crop) => {
 const ProfilePicture = ({ onUpload }) => {
   const { user, error } = useFetchUser();
   const [selectedFile, setSelectedFile] = useState(null);
-  const [profilePicture, setProfilePicture] = useState(
-    user?.profilePicture || null
-  );
+  const [profilePicture, setProfilePicture] = useState(user?.profilePicture || null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
-  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-    setCroppedAreaPixels(croppedAreaPixels);
-  }, []);
+  const handleFileSelect = () => {
+    fileInputRef.current.click();
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files.length > 0) {
@@ -70,6 +71,10 @@ const ProfilePicture = ({ onUpload }) => {
       console.error("No file selected");
     }
   };
+
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
 
   const handleCropAndUpload = useCallback(async () => {
     if (!selectedFile || !user) {
@@ -128,7 +133,19 @@ const ProfilePicture = ({ onUpload }) => {
               <p>No profile picture uploaded</p>
             )}
           </div>
-          <input type="file" accept="image/*" onChange={handleFileChange} />
+          {!isCropping && (
+            <button onClick={handleFileSelect} className="upload-button">
+              {profilePicture ? "Update Profile Picture" : "Upload Profile Picture"}
+            </button>
+          )}
+          {/* Hidden file input */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            ref={fileInputRef}
+            style={{ display: "none" }}
+          />
           {isCropping && selectedFile && (
             <>
               <div className="crop-container">
@@ -142,7 +159,7 @@ const ProfilePicture = ({ onUpload }) => {
                   onZoomChange={setZoom}
                 />
               </div>
-              <button onClick={handleCropAndUpload}>Crop & Save</button>
+              <button onClick={handleCropAndUpload} className="crop-button">Crop & Save</button>
             </>
           )}
         </>

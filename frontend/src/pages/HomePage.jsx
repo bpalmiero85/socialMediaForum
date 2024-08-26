@@ -3,7 +3,6 @@ import "../styles/HomePage.css";
 import useFetchUser from "../components/FetchUser";
 import ProfilePicture from "../components/ProfilePicture";
 import ScrollAnimation from "react-animate-on-scroll";
-import { useLocation } from "react-router-dom";
 
 const HomePage = () => {
   const { user, error } = useFetchUser();
@@ -17,9 +16,13 @@ const HomePage = () => {
   const [selectedThread, setSelectedThread] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState("");
+  const [showCreateButton, setShowCreateButton] = useState(true);
+  const [homeAnimation, setHomeAnimation] = useState([]);
+
 
   useEffect(() => {
     fetchThreads();
+    triggerHomeAnimation();
   }, []);
 
   const fetchThreads = async () => {
@@ -43,8 +46,25 @@ const HomePage = () => {
     }
   };
 
+  const triggerHomeAnimation = () => {
+    const spans = Array.from(document.querySelectorAll(".home-header span"));
+
+    spans.forEach((span, idx) => {
+      span.addEventListener("click", (e) => {
+        e.target.classList.add("active");
+      });
+
+      setTimeout(() => {
+        span.classList.add("active");
+      }, 750 * (idx + 1));
+    });
+
+    setHomeAnimation(spans);
+  }
+
   const handleToggleForm = () => {
     setShowForm(!showForm);
+    setShowCreateButton(true);
   };
 
   const handleToggleUpload = () => {
@@ -54,6 +74,7 @@ const HomePage = () => {
   const handlePictureUpload = () => {
     setIsPictureUploaded(true);
     setShowUploadPic(true);
+    setShowCreateButton(true);
   };
 
   const handleThreadClick = (thread) => {
@@ -84,6 +105,7 @@ const HomePage = () => {
         setTitle("");
         setContent("");
         setShowForm(false);
+        setShowCreateButton(true);
       } else {
         throw new Error("Expected JSON, got something else");
       }
@@ -114,22 +136,6 @@ const HomePage = () => {
       console.error("Error fetching comments:", error);
     }
   };
-
-  const spans = document.querySelectorAll(".home-header span");
-
-  spans.forEach((span, idx) => {
-    span.addEventListener("click", (e) => {
-      e.target.classList.add("active");
-    });
-    span.addEventListener("animationend", (e) => {
-      e.target.classList.remove("active");
-    });
-
-    // Initial animation
-    setTimeout(() => {
-      span.classList.add("active");
-    }, 750 * (idx + 1));
-  });
 
   const handleCreateComment = async (e) => {
     e.preventDefault();
@@ -195,66 +201,63 @@ const HomePage = () => {
             </ScrollAnimation>
           </p>
         </div>
+
         {!isPictureUploaded && (
           <button onClick={handleToggleUpload} className="upload-pic-button">
             Upload Profile Picture
           </button>
         )}
+        {showUploadPic && <div className="home-profile-picture"><ProfilePicture onUpload={handlePictureUpload}/></div>}
 
-        {showUploadPic && <ProfilePicture onUpload={handlePictureUpload} />}
+        {!showForm && !isPictureUploaded && (
+          <button onClick={handleToggleForm} className="create-thread-button">
+            Create Post
+          </button>
+        )}
+
+        {isPictureUploaded && showCreateButton && !showForm && (
+          <button onClick={handleToggleForm} className="create-thread-button-after">
+            Create Post
+          </button>
+        )}
+
+     
+
         {showForm && (
-          <form onSubmit={handleCreateThread} className="thread-form">
-            <h2 className="create-thread-title">Create Post</h2>
-            <label className="thread-input">
-              Title:
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-            </label>
-            <br />
-            <label className="thread-input">
-              Content:
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                required
-              />
-            </label>
-            <button type="submit" className="create-button">
-              Post
+          <>
+            <form onSubmit={handleCreateThread} className="thread-form">
+              <h2 className="create-thread-title">Create Post</h2>
+              <label className="thread-input">
+                Title:
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                />
+              </label>
+              <br />
+              <label className="thread-input">
+                Content:
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  required
+                />
+              </label>
+              <button type="submit" className="create-button">
+                Post
+              </button>
+              <button onClick={handleToggleForm} className="cancel-thread-button">
+              Cancel
             </button>
-          </form>
+            </form>
+          </>
         )}
         {successMessage && (
           <div className="success-message">{successMessage}</div>
         )}
-        {!showForm && !isPictureUploaded ? (
-          <button onClick={handleToggleForm} className="create-thread-button">
-            Create Post
-          </button>
-        ) : (
-          ""
-        )}
 
-        {!showForm && isPictureUploaded ? (
-          <button
-            onClick={handleToggleForm}
-            className="create-thread-button-after"
-          >
-            Create Post
-          </button>
-        ) : (
-          ""
-        )}
-
-        {showForm && (
-          <button onClick={handleToggleForm} className="cancel-thread-button">
-            Cancel
-          </button>
-        )}
         {threads.length > 0 && (
           <div className="thread-list">
             <h3>Recent Posts:</h3>
@@ -266,10 +269,18 @@ const HomePage = () => {
                 onClick={() => handleThreadClick(thread)}
               >
                 <h4 className="thread-title">{thread.title}</h4>
-                <p className="thread-username">
-                  {showUploadPic ? user.profilePicture : ""}{" "}
-                  {thread.user?.username}
-                </p>
+                <div className="thread-user-info"> 
+                  {user.profilePicture && (  
+                    <img
+                      src={`http://localhost:8080/uploads/${user.profilePicture}`}
+                      alt="User profile"
+                      className="profile-picture-small"
+                    />
+                  )}
+                  <p className="thread-username">
+                    {thread.user?.username}
+                  </p>
+                </div>
                 <p className="thread-created-at">{thread.createdAt}</p>
                 <p className="thread-content">{thread.content}</p>
                 <p className="thread-comments">Comments: {thread.comments}</p>
@@ -281,9 +292,18 @@ const HomePage = () => {
                       {comments.map((comment) => (
                         <div key={comment.postId} className="comment-item">
                           <p>{comment.postContent}</p>
-                          <div className="comment-username">
-                            <p>{comment.user?.username}</p>
-                          </div>
+                          <div className="thread-user-info"> 
+                  {user.profilePicture && (  
+                    <img
+                      src={`http://localhost:8080/uploads/${user.profilePicture}`}
+                      alt="User profile"
+                      className="profile-picture-small"
+                    />
+                  )}
+                  <p className="comment-username">
+                    {comment.user?.username}
+                  </p>
+                </div>
 
                           <p className="comment-created-at">
                             {comment.postCreatedAt}
