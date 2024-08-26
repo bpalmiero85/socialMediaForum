@@ -101,6 +101,13 @@ const UserInfo = () => {
 
   return (
     <div className="user-info-page-container">
+     
+                    <img
+                      src={`http://localhost:8080/uploads/${user.profilePicture}`}
+                      alt="User profile"
+                      className="profile-picture-info"
+                    />
+                
       <div className="user-info-header">
         <h1>User Info</h1>
       </div>
@@ -216,7 +223,14 @@ const UserInfo = () => {
           </div>
           <div className="user-info-field">
             <strong>Username:</strong>
-            <span>{user.username}</span>
+            <span>
+            {user.profilePicture && (  
+                    <img
+                      src={`http://localhost:8080/uploads/${user.profilePicture}`}
+                      alt="User profile"
+                      className="profile-picture-small"
+                    />
+                  )}{user.username}</span>
           </div>
         </div>
       </div>

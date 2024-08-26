@@ -207,7 +207,11 @@ const HomePage = () => {
             Upload Profile Picture
           </button>
         )}
-        {showUploadPic && <div className="home-profile-picture"><ProfilePicture onUpload={handlePictureUpload}/></div>}
+        {showUploadPic && (
+          <div className="home-profile-picture">
+          <ProfilePicture onUpload={handlePictureUpload}/>
+          </div>
+          )}
 
         {!showForm && !isPictureUploaded && (
           <button onClick={handleToggleForm} className="create-thread-button">
