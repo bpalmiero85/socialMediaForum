@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useFetchUser from "./FetchUser";
 import Cropper from "react-easy-crop";
-
+import "../styles/HomePage.css";
 
 const createImage = (url) =>
   new Promise((resolve, reject) => {
@@ -22,7 +22,6 @@ const getCroppedImg = async (imageSrc, crop) => {
   canvas.height = crop.height;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
 
   ctx.beginPath();
   ctx.arc(crop.width / 2, crop.height / 2, crop.width / 2, 0, 2 * Math.PI);
@@ -48,10 +47,18 @@ const getCroppedImg = async (imageSrc, crop) => {
   });
 };
 
-const ProfilePicture = ({ onUpload }) => {
+const ProfilePicture = ({
+  onUpload,
+  isPictureUploaded,
+  setIsPictureUploaded,
+  setCroppingStatus,
+
+}) => {
   const { user, error } = useFetchUser();
   const [selectedFile, setSelectedFile] = useState(null);
-  const [profilePicture, setProfilePicture] = useState(user?.profilePicture || null);
+  const [profilePicture, setProfilePicture] = useState(
+    user?.profilePicture || null
+  );
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
@@ -67,6 +74,7 @@ const ProfilePicture = ({ onUpload }) => {
     if (e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
       setIsCropping(true);
+      setCroppingStatus(true);
     } else {
       console.error("No file selected");
     }
@@ -81,17 +89,17 @@ const ProfilePicture = ({ onUpload }) => {
       console.error("No file selected or user not loaded");
       return;
     }
-
+  
     try {
       const croppedImage = await getCroppedImg(
         URL.createObjectURL(selectedFile),
         croppedAreaPixels
       );
-
+  
       const formData = new FormData();
       formData.append("file", croppedImage);
       formData.append("username", user.username);
-
+  
       const response = await fetch(
         "http://localhost:8080/user/uploadProfilePicture",
         {
@@ -100,22 +108,23 @@ const ProfilePicture = ({ onUpload }) => {
           credentials: "include",
         }
       );
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+  
       const data = await response.json();
       console.log("Profile picture uploaded successfully", data);
-
+  
       setProfilePicture(data.profilePicture);
-      onUpload();
-      navigate(`/homepage?username=${user.username}`);
+      setIsPictureUploaded(true);
+      onUpload();  // Call this to trigger changes in the parent (HomePage)
       setIsCropping(false);
+      setCroppingStatus(false);
     } catch (e) {
       console.error("Error cropping or uploading image:", e);
     }
-  }, [croppedAreaPixels, selectedFile, user, navigate, onUpload]);
+  }, [croppedAreaPixels, selectedFile, user, onUpload, setCroppingStatus]);
 
   return (
     <div className="profile-picture-container">
@@ -130,15 +139,24 @@ const ProfilePicture = ({ onUpload }) => {
                 className="profile-picture"
               />
             ) : (
-              <p>No profile picture uploaded</p>
+              <p></p>
             )}
           </div>
-          {!isCropping && (
+          
+          {profilePicture && !isCropping && (
+            <div className="update-pic-container">
+              <button onClick={handleFileSelect} className="update-pic-button">
+                Update Profile Picture
+              </button>
+            </div>
+          )}
+
+          {!profilePicture && !isCropping && (
             <button onClick={handleFileSelect} className="upload-button">
-              {profilePicture ? "Update Profile Picture" : "Upload Profile Picture"}
+              Upload Profile Picture
             </button>
           )}
-          {/* Hidden file input */}
+
           <input
             type="file"
             accept="image/*"
@@ -159,7 +177,9 @@ const ProfilePicture = ({ onUpload }) => {
                   onZoomChange={setZoom}
                 />
               </div>
-              <button onClick={handleCropAndUpload} className="crop-button">Crop & Save</button>
+              <button onClick={handleCropAndUpload} className="crop-button">
+                Crop & Save
+              </button>
             </>
           )}
         </>
@@ -171,3 +191,4 @@ const ProfilePicture = ({ onUpload }) => {
 };
 
 export default ProfilePicture;
+

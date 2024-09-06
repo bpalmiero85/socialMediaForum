@@ -18,12 +18,18 @@ const HomePage = () => {
   const [commentContent, setCommentContent] = useState("");
   const [showCreateButton, setShowCreateButton] = useState(true);
   const [homeAnimation, setHomeAnimation] = useState([]);
+  const [isCropping, setIsCropping] = useState(false);
 
 
   useEffect(() => {
     fetchThreads();
     triggerHomeAnimation();
   }, []);
+  
+
+  const handleCroppingStatusChange = (croppingStatus) => {
+    setIsCropping(croppingStatus);
+  }
 
   const fetchThreads = async () => {
     try {
@@ -60,11 +66,11 @@ const HomePage = () => {
     });
 
     setHomeAnimation(spans);
-  }
+  };
 
   const handleToggleForm = () => {
     setShowForm(!showForm);
-    setShowCreateButton(true);
+    setShowCreateButton(!showForm);
   };
 
   const handleToggleUpload = () => {
@@ -83,7 +89,7 @@ const HomePage = () => {
   };
 
   const handleCreateThread = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); 
 
     try {
       const response = await fetch(`http://localhost:8080/threads`, {
@@ -94,6 +100,10 @@ const HomePage = () => {
         body: JSON.stringify({ title, content, user }),
         credentials: "include",
       });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
 
       const textResponse = await response.text();
       console.log("Raw response:", textResponse);
@@ -112,7 +122,7 @@ const HomePage = () => {
     } catch (error) {
       console.error("Error creating post:", error);
     }
-  };
+};
 
   const fetchComments = async (threadId) => {
     try {
@@ -135,6 +145,11 @@ const HomePage = () => {
     } catch (error) {
       console.error("Error fetching comments:", error);
     }
+  };
+
+  const handleCancelCreateThread = () => {
+    setShowForm(false);
+    setShowCreateButton(true);
   };
 
   const handleCreateComment = async (e) => {
@@ -194,33 +209,29 @@ const HomePage = () => {
         </div>
 
         <div className="home-message">
-          <p>
+          
             <ScrollAnimation animateIn="bounceIn">
-              Hello, {user?.firstName ? user.firstName : "Guest"}! What would
-              you like to do?
+             <p>Hello, {user?.firstName ? user.firstName : "Guest"}! What would
+              you like to do?</p>
             </ScrollAnimation>
-          </p>
+          
         </div>
 
-        {!isPictureUploaded && (
-          <button onClick={handleToggleUpload} className="upload-pic-button">
-            Upload Profile Picture
-          </button>
-        )}
-        {showUploadPic && (
-          <div className="home-profile-picture">
-          <ProfilePicture onUpload={handlePictureUpload}/>
-          </div>
-          )}
+        <ProfilePicture
+          onUpload={handlePictureUpload}
+          isPictureUploaded={isPictureUploaded}
+          setIsPictureUploaded={setIsPictureUploaded}
+          setCroppingStatus={handleCroppingStatusChange}
+        />
 
-        {!showForm && !isPictureUploaded && (
+        {!showForm && showCreateButton && !isPictureUploaded && (
           <button onClick={handleToggleForm} className="create-thread-button">
             Create Post
           </button>
         )}
 
         {isPictureUploaded && showCreateButton && !showForm && (
-          <button onClick={handleToggleForm} className="create-thread-button-after">
+          <button onClick={handleToggleForm} className="create-thread-button">
             Create Post
           </button>
         )}
@@ -252,7 +263,7 @@ const HomePage = () => {
               <button type="submit" className="create-button">
                 Post
               </button>
-              <button onClick={handleToggleForm} className="cancel-thread-button">
+              <button onClick={handleCancelCreateThread} className="cancel-thread-button">
               Cancel
             </button>
             </form>
@@ -273,21 +284,43 @@ const HomePage = () => {
                 onClick={() => handleThreadClick(thread)}
               >
                 <h4 className="thread-title">{thread.title}</h4>
-                <div className="thread-user-info"> 
-                  {user.profilePicture && (  
+                <div className="thread-user-info">
+                  {user.profilePicture && (
                     <img
                       src={`http://localhost:8080/uploads/${user.profilePicture}`}
                       alt="User profile"
                       className="profile-picture-small"
                     />
                   )}
-                  <p className="thread-username">
-                    {thread.user?.username}
-                  </p>
+                  <p className="thread-username">{thread.user?.username}</p>
                 </div>
                 <p className="thread-created-at">{thread.createdAt}</p>
                 <p className="thread-content">{thread.content}</p>
                 <p className="thread-comments">Comments: {thread.comments}</p>
+
+                {showForm && (
+  <form onSubmit={handleCreateThread} className="thread-form">
+    <input
+      type="text"
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+      required
+      placeholder="Title"
+    />
+    <textarea
+      value={content}
+      onChange={(e) => setContent(e.target.value)}
+      required
+      placeholder="Content"
+    ></textarea>
+    <button type="submit" className="submit-thread-button">
+      Submit
+    </button>
+    <button onClick={handleToggleForm} className="cancel-button">
+      Cancel
+    </button>
+  </form>
+)}
 
                 {selectedThread?.forumThreadId === thread.forumThreadId && (
                   <div className="thread-details">
@@ -296,18 +329,18 @@ const HomePage = () => {
                       {comments.map((comment) => (
                         <div key={comment.postId} className="comment-item">
                           <p>{comment.postContent}</p>
-                          <div className="thread-user-info"> 
-                  {user.profilePicture && (  
-                    <img
-                      src={`http://localhost:8080/uploads/${user.profilePicture}`}
-                      alt="User profile"
-                      className="profile-picture-small"
-                    />
-                  )}
-                  <p className="comment-username">
-                    {comment.user?.username}
-                  </p>
-                </div>
+                          <div className="thread-user-info">
+                            {user.profilePicture && (
+                              <img
+                                src={`http://localhost:8080/uploads/${user.profilePicture}`}
+                                alt="User profile"
+                                className="profile-picture-small"
+                              />
+                            )}
+                            <p className="comment-username">
+                              {comment.user?.username}
+                            </p>
+                          </div>
 
                           <p className="comment-created-at">
                             {comment.postCreatedAt}
