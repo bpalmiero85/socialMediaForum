@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useFetchUser from "./FetchUser";
 import Cropper from "react-easy-crop";
@@ -45,26 +45,29 @@ const getCroppedImg = async (imageSrc, crop) => {
       resolve(blob);
     }, "image/png");
   });
-};
+}
 
 const ProfilePicture = ({
   onUpload,
   isPictureUploaded,
   setIsPictureUploaded,
   setCroppingStatus,
-
 }) => {
   const { user, error } = useFetchUser();
   const [selectedFile, setSelectedFile] = useState(null);
-  const [profilePicture, setProfilePicture] = useState(
-    user?.profilePicture || null
-  );
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const [profilePicture, setProfilePicture] = useState(user?.profilePicture || null);
+
+  useEffect(() => {
+    if (user?.profilePicture) {
+      setProfilePicture(user.profilePicture);
+    }
+  }, [user]);
 
   const handleFileSelect = () => {
     fileInputRef.current.click();
@@ -89,17 +92,17 @@ const ProfilePicture = ({
       console.error("No file selected or user not loaded");
       return;
     }
-  
+
     try {
       const croppedImage = await getCroppedImg(
         URL.createObjectURL(selectedFile),
         croppedAreaPixels
       );
-  
+
       const formData = new FormData();
       formData.append("file", croppedImage);
       formData.append("username", user.username);
-  
+
       const response = await fetch(
         "http://localhost:8080/user/uploadProfilePicture",
         {
@@ -108,17 +111,17 @@ const ProfilePicture = ({
           credentials: "include",
         }
       );
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const data = await response.json();
       console.log("Profile picture uploaded successfully", data);
-  
+
       setProfilePicture(data.profilePicture);
       setIsPictureUploaded(true);
-      onUpload();  // Call this to trigger changes in the parent (HomePage)
+      onUpload(); 
       setIsCropping(false);
       setCroppingStatus(false);
     } catch (e) {
@@ -131,40 +134,7 @@ const ProfilePicture = ({
       {error && <p>{error}</p>}
       {user ? (
         <>
-          <div className="profile-picture">
-            {profilePicture ? (
-              <img
-                src={`http://localhost:8080/uploads/${profilePicture}`}
-                alt="Profile Picture"
-                className="profile-picture"
-              />
-            ) : (
-              <p></p>
-            )}
-          </div>
-          
-          {profilePicture && !isCropping && (
-            <div className="update-pic-container">
-              <button onClick={handleFileSelect} className="update-pic-button">
-                Update Profile Picture
-              </button>
-            </div>
-          )}
-
-          {!profilePicture && !isCropping && (
-            <button onClick={handleFileSelect} className="upload-button">
-              Upload Profile Picture
-            </button>
-          )}
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            ref={fileInputRef}
-            style={{ display: "none" }}
-          />
-          {isCropping && selectedFile && (
+          {isCropping ? (
             <>
               <div className="crop-container">
                 <Cropper
@@ -181,6 +151,34 @@ const ProfilePicture = ({
                 Crop & Save
               </button>
             </>
+          ) : profilePicture ? (
+            <div className="profile-picture">
+              <img
+                src={`http://localhost:8080/uploads/${profilePicture}`}
+                alt="Profile Picture"
+                className="profile-picture"
+              />
+            </div>
+          ) : (
+            <button onClick={handleFileSelect} className="upload-button">
+              Upload Profile Picture
+            </button>
+          )}
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            ref={fileInputRef}
+            style={{ display: "none" }}
+          />
+
+          {profilePicture && !isCropping && (
+            <div className="update-pic-container">
+              <button onClick={handleFileSelect} className="update-pic-button">
+                Update Profile Picture
+              </button>
+            </div>
           )}
         </>
       ) : (
@@ -191,4 +189,3 @@ const ProfilePicture = ({
 };
 
 export default ProfilePicture;
-
