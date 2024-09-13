@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+import ProfilePicture from "./ProfilePicture";
 
 function useFetchUser() {
   const location = useLocation();
@@ -32,7 +33,7 @@ function useFetchUser() {
     if (username) {
       fetchUser();
     }
-  }, [username]);
+  }, [username, ProfilePicture]);
 
   return { user, error, setUser };
 }

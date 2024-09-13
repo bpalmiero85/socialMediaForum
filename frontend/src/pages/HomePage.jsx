@@ -20,16 +20,14 @@ const HomePage = () => {
   const [homeAnimation, setHomeAnimation] = useState([]);
   const [isCropping, setIsCropping] = useState(false);
 
-
   useEffect(() => {
     fetchThreads();
     triggerHomeAnimation();
   }, []);
-  
 
   const handleCroppingStatusChange = (croppingStatus) => {
     setIsCropping(croppingStatus);
-  }
+  };
 
   const fetchThreads = async () => {
     try {
@@ -89,7 +87,7 @@ const HomePage = () => {
   };
 
   const handleCreateThread = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
 
     try {
       const response = await fetch(`http://localhost:8080/threads`, {
@@ -122,7 +120,7 @@ const HomePage = () => {
     } catch (error) {
       console.error("Error creating post:", error);
     }
-};
+  };
 
   const fetchComments = async (threadId) => {
     try {
@@ -209,20 +207,22 @@ const HomePage = () => {
         </div>
 
         <div className="home-message">
-          
-            <ScrollAnimation animateIn="bounceIn">
-             <p>Hello, {user?.firstName ? user.firstName : "Guest"}! What would
-              you like to do?</p>
-            </ScrollAnimation>
-          
+          <ScrollAnimation animateIn="bounceIn">
+            <p>
+              Hello, {user?.firstName ? user.firstName : "Guest"}! What would
+              you like to do?
+            </p>
+          </ScrollAnimation>
         </div>
 
-        <ProfilePicture
-          onUpload={handlePictureUpload}
-          isPictureUploaded={isPictureUploaded}
-          setIsPictureUploaded={setIsPictureUploaded}
-          setCroppingStatus={handleCroppingStatusChange}
-        />
+      
+          <ProfilePicture
+            onUpload={handlePictureUpload}
+            isPictureUploaded={isPictureUploaded}
+            setIsPictureUploaded={setIsPictureUploaded}
+            setCroppingStatus={handleCroppingStatusChange}
+          />
+          
 
         {!showForm && showCreateButton && !isPictureUploaded && (
           <button onClick={handleToggleForm} className="create-thread-button">
@@ -235,8 +235,6 @@ const HomePage = () => {
             Create Post
           </button>
         )}
-
-     
 
         {showForm && (
           <>
@@ -263,9 +261,12 @@ const HomePage = () => {
               <button type="submit" className="create-button">
                 Post
               </button>
-              <button onClick={handleCancelCreateThread} className="cancel-thread-button">
-              Cancel
-            </button>
+              <button
+                onClick={handleCancelCreateThread}
+                className="cancel-thread-button"
+              >
+                Cancel
+              </button>
             </form>
           </>
         )}
@@ -299,28 +300,31 @@ const HomePage = () => {
                 <p className="thread-comments">Comments: {thread.comments}</p>
 
                 {showForm && (
-  <form onSubmit={handleCreateThread} className="thread-form">
-    <input
-      type="text"
-      value={title}
-      onChange={(e) => setTitle(e.target.value)}
-      required
-      placeholder="Title"
-    />
-    <textarea
-      value={content}
-      onChange={(e) => setContent(e.target.value)}
-      required
-      placeholder="Content"
-    ></textarea>
-    <button type="submit" className="submit-thread-button">
-      Submit
-    </button>
-    <button onClick={handleToggleForm} className="cancel-button">
-      Cancel
-    </button>
-  </form>
-)}
+                  <form onSubmit={handleCreateThread} className="thread-form">
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      required
+                      placeholder="Title"
+                    />
+                    <textarea
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      required
+                      placeholder="Content"
+                    ></textarea>
+                    <button type="submit" className="submit-thread-button">
+                      Submit
+                    </button>
+                    <button
+                      onClick={handleToggleForm}
+                      className="cancel-button"
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                )}
 
                 {selectedThread?.forumThreadId === thread.forumThreadId && (
                   <div className="thread-details">
