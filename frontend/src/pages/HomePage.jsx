@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "../styles/HomePage.css";
 import useFetchUser from "../components/FetchUser";
-import ProfilePicture from "../components/ProfilePicture";
 import ScrollAnimation from "react-animate-on-scroll";
+import ProfilePicture from "../components/ProfilePicture";
+import Placeholder from "../placeholders/default-placeholder.png";
 
 const HomePage = () => {
   const { user, error } = useFetchUser();
@@ -89,17 +90,41 @@ const HomePage = () => {
   const handleCreateThread = async (e) => {
     e.preventDefault();
 
+    if (!user || !user.username) {
+      console.error("User not available. Please log in.");
+      return;
+    }
+
+    const profilePicture = user.profilePicture ? user.profilePicture : "";
+
+    console.log({
+      username: user?.username,
+      profilePicture: user.profilePicture,
+      title,
+      content,
+    });
+
     try {
-      const response = await fetch(`http://localhost:8080/threads`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ title, content, user }),
-        credentials: "include",
-      });
+      const response = await fetch(
+        `http://localhost:8080/threads?username=${encodeURIComponent(
+          user.username
+        )}&profilePicture=${encodeURIComponent(profilePicture)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title,
+            content,
+          }),
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error creating thread: ${errorText}`);
         throw new Error(`Error: ${response.statusText}`);
       }
 
@@ -153,9 +178,20 @@ const HomePage = () => {
   const handleCreateComment = async (e) => {
     e.preventDefault();
 
+    if (!user || !user.username) {
+      console.error("User not available. Please log in.");
+      return;
+    }
+
+    const profilePicture = user.profilePicture
+      ? user.profilePicture
+      : Placeholder;
+
     try {
       const response = await fetch(
-        `http://localhost:8080/posts?username=${user.username}`,
+        `http://localhost:8080/posts?username=${encodeURIComponent(
+          user.username
+        )}&profilePicture=${encodeURIComponent(profilePicture)}`,
         {
           method: "POST",
           headers: {
@@ -215,14 +251,12 @@ const HomePage = () => {
           </ScrollAnimation>
         </div>
 
-      
-          <ProfilePicture
-            onUpload={handlePictureUpload}
-            isPictureUploaded={isPictureUploaded}
-            setIsPictureUploaded={setIsPictureUploaded}
-            setCroppingStatus={handleCroppingStatusChange}
-          />
-          
+        <ProfilePicture
+          onUpload={handlePictureUpload}
+          isPictureUploaded={isPictureUploaded}
+          setIsPictureUploaded={setIsPictureUploaded}
+          setCroppingStatus={handleCroppingStatusChange}
+        />
 
         {!showForm && showCreateButton && !isPictureUploaded && (
           <button onClick={handleToggleForm} className="create-thread-button">
@@ -286,14 +320,22 @@ const HomePage = () => {
               >
                 <h4 className="thread-title">{thread.title}</h4>
                 <div className="thread-user-info">
-                  {user.profilePicture && (
+                  {thread.user?.profilePicture ? (
                     <img
-                      src={`http://localhost:8080/uploads/${user.profilePicture}`}
-                      alt="User profile"
+                      src={`http://localhost:8080/uploads/${thread.user.profilePicture}`}
+                      alt="User profile pic"
+                      className="profile-picture-small"
+                    />
+                  ) : (
+                    <img
+                      src={Placeholder}
+                      alt="No Pic"
                       className="profile-picture-small"
                     />
                   )}
-                  <p className="thread-username">{thread.user?.username}</p>
+                  <p className="thread-username">
+                    {thread.user?.username || "Unknown User"}
+                  </p>
                 </div>
                 <p className="thread-created-at">{thread.createdAt}</p>
                 <p className="thread-content">{thread.content}</p>
@@ -334,15 +376,21 @@ const HomePage = () => {
                         <div key={comment.postId} className="comment-item">
                           <p>{comment.postContent}</p>
                           <div className="thread-user-info">
-                            {user.profilePicture && (
+                            {comment.user?.profilePicture ? (
                               <img
-                                src={`http://localhost:8080/uploads/${user.profilePicture}`}
+                                src={`http://localhost:8080/uploads/${comment.user.profilePicture}`}
                                 alt="User profile"
+                                className="profile-picture-small"
+                              />
+                            ) : (
+                              <img
+                                src={Placeholder}
+                                alt="No Pic"
                                 className="profile-picture-small"
                               />
                             )}
                             <p className="comment-username">
-                              {comment.user?.username}
+                              {comment.user?.username || "Unknown User"}
                             </p>
                           </div>
 

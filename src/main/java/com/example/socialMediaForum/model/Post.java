@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -36,6 +37,9 @@ public class Post {
   private LocalDateTime postCreatedAt;
 
   private LocalDateTime postLastUpdatedAt;
+
+  @Column(name = "profile_picture")
+  private String profilePicture;
 
   private int upvotes;
 

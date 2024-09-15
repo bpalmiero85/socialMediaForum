@@ -33,9 +33,13 @@ public class ThreadService {
     return false;
   }
 
-  public ForumThread createThread(ForumThread forumThread, String username) {
+  public ForumThread createThread(ForumThread forumThread, String username, String profilePicture) {
     User user = userRepository.findByUsername(username);
+    if(user == null){
+      throw new IllegalArgumentException("User not found");
+    }
     forumThread.setUser(user);
+    forumThread.setProfilePicture(user.getProfilePicture());
     forumThread.setCreatedAt(LocalDateTime.now());
     return forumThreadRepository.save(forumThread);
   }

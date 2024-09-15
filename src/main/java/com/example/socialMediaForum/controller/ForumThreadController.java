@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.socialMediaForum.model.ForumThread;
@@ -40,12 +41,12 @@ public class ForumThreadController {
   }
 
   @PostMapping(produces = "application/json")
-  public ResponseEntity<?> createThread(@RequestBody ForumThread forumThread) {
+  public ResponseEntity<?> createThread(@RequestBody ForumThread forumThread, @RequestParam String username, @RequestParam(required = false) String profilePicture) {
     try {
       if (forumThread == null || forumThread.getTitle() == null || forumThread.getContent() == null) {
         return ResponseEntity.badRequest().body("Title and content must be provided");
       }
-      ForumThread savedThread = threadService.save(forumThread);
+      ForumThread savedThread = threadService.createThread(forumThread, username, profilePicture != null ? profilePicture : "");
       return ResponseEntity.ok(savedThread);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.badRequest().body(e.getMessage());
