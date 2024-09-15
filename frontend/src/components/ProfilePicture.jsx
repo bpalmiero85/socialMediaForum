@@ -155,8 +155,8 @@ const ProfilePicture = ({
             <div className="profile-picture">
               <img
                 src={`http://localhost:8080/uploads/${profilePicture}`}
-                alt="Profile Picture"
-                className="profile-picture"
+                alt="User profile"
+                className="current-user-profile-picture"
               />
             </div>
           ) : (

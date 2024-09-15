@@ -29,9 +29,9 @@ public class PostController {
   }
 
   @PostMapping
-  public ResponseEntity<Post> createPost(@RequestBody Post post, @RequestParam String username) {
+  public ResponseEntity<Post> createPost(@RequestBody Post post, @RequestParam String username, @RequestParam(required = false) String profilePicture) {
     try {
-      Post savedPost = postService.createPost(post, username);
+      Post savedPost = postService.createPost(post, username, profilePicture);
       return ResponseEntity.ok(savedPost);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.badRequest().body(null);

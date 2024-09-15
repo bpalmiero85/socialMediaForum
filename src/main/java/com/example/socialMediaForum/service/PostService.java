@@ -31,7 +31,7 @@ public class PostService {
     return postRepository.findByThread_ForumThreadId(forumThreadId);
   }
 
-  public Post createPost(@RequestBody Post post, @RequestParam String username) {
+  public Post createPost(@RequestBody Post post, @RequestParam String username, @RequestParam String profilePicture) {
 
     ForumThread forumThread = forumThreadRepository.findById(post.getThread().getForumThreadId())
         .orElseThrow(() -> new IllegalArgumentException("Thread not found"));
@@ -43,6 +43,7 @@ public class PostService {
 
     post.setThread(forumThread);
     post.setUser(user);
+    post.setProfilePicture(user.getProfilePicture());
     post.setPostCreatedAt(LocalDateTime.now());
     post.setPostLastUpdatedAt(LocalDateTime.now());
 

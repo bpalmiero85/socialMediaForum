@@ -1,6 +1,7 @@
 package com.example.socialMediaForum.model;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -38,6 +39,9 @@ public class ForumThread {
   private LocalDateTime createdAt;
 
   private LocalDateTime lastUpdatedAt;
+
+  @Column(name = "profile_picture")
+  private String profilePicture;
 
   @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference
