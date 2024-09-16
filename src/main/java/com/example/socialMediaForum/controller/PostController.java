@@ -4,6 +4,7 @@ import com.example.socialMediaForum.model.Post;
 import com.example.socialMediaForum.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +17,9 @@ public class PostController {
 
   @Autowired
   private PostService postService;
+
+  @Autowired
+  private SimpMessagingTemplate messagingTemplate; 
 
   @GetMapping("/thread/{forumThreadId}")
   public List<Post> getAllPostsByThreadId(@PathVariable Long forumThreadId) {
@@ -31,8 +35,10 @@ public class PostController {
   @PostMapping
   public ResponseEntity<Post> createPost(@RequestBody Post post, @RequestParam String username, @RequestParam(required = false) String profilePicture) {
     try {
-      Post savedPost = postService.createPost(post, username, profilePicture);
-      return ResponseEntity.ok(savedPost);
+      Post newPost = postService.createPost(post, username, profilePicture);
+
+      messagingTemplate.convertAndSend("/topic/thread" + newPost.getThread() + "/comments", newPost);
+      return ResponseEntity.ok(newPost);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.badRequest().body(null);
     }

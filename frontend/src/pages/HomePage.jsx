@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import SockJS from "sockjs-client";
+import { Stomp } from "@stomp/stompjs";
 import "../styles/HomePage.css";
 import useFetchUser from "../components/FetchUser";
 import ScrollAnimation from "react-animate-on-scroll";
@@ -17,10 +19,18 @@ const HomePage = () => {
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState("");
   const [showCreateButton, setShowCreateButton] = useState(true);
+
   const [isCropping, setIsCropping] = useState(false);
+
+  const [stompClient, setStompClient] = useState(null);
 
   useEffect(() => {
     fetchThreads();
+    connectWebSocket();
+
+    return () => {
+      if (stompClient) stompClient.disconnect();
+    };
   }, []);
 
   const fetchThreads = async () => {
@@ -56,6 +66,44 @@ const HomePage = () => {
     }
   };
 
+  const connectWebSocket = () => {
+    const socket = new SockJS("http://localhost:8080/ws");
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect(
+      {},
+      (frame) => {
+        console.log("Connected to WebSocket", frame);
+
+        stompClient.subscribe("/topic/threads", (message) => {
+          const newThread = JSON.parse(message.body);
+          setThreads((prevThreads) => [newThread, ...prevThreads]);
+        });
+
+        stompClient.subscribe("/topic/comments", (message) => {
+          const newComment = JSON.parse(message.body);
+
+          setThreads((prevThreads) =>
+            prevThreads.map((thread) =>
+              thread.forumThreadId === newComment.threadId
+                ? { ...thread, comments: thread.comments + 1 }
+                : thread
+            )
+          );
+
+          if (selectedThread?.forumThreadId === newComment.threadId) {
+            setComments((prevComments) => [newComment, ...prevComments]);
+          }
+        });
+      },
+      (error) => {
+        console.error("Error connecting to WebSocket:", error);
+      }
+    );
+
+    setStompClient(stompClient);
+  };
+
   const handleThreadClick = (thread) => {
     setSelectedThread(thread);
     fetchComments(thread.forumThreadId);
@@ -77,9 +125,7 @@ const HomePage = () => {
       const response = await fetch(
         `http://localhost:8080/threads?username=${encodeURIComponent(
           user.username
-        )}&profilePicture=${encodeURIComponent(
-          user.profilePicture || ""
-        )}`,
+        )}&profilePicture=${encodeURIComponent(user.profilePicture || "")}`,
         {
           method: "POST",
           headers: {
@@ -102,7 +148,7 @@ const HomePage = () => {
       setThreads([newThread, ...threads]);
       setTitle("");
       setContent("");
-      setShowForm(false); 
+      setShowForm(false);
     } catch (error) {
       console.error("Error creating post:", error);
     }
@@ -139,8 +185,6 @@ const HomePage = () => {
       }
 
       const newComment = await response.json();
-
-     
       setComments([newComment, ...comments]);
       setThreads((prevThreads) =>
         prevThreads.map((thread) =>
@@ -151,9 +195,6 @@ const HomePage = () => {
       );
 
       setCommentContent("");
-
-      fetchThreads();
-      fetchComments(selectedThread.forumThreadId);
     } catch (error) {
       console.error("Error creating comment:", error);
     }
@@ -187,14 +228,12 @@ const HomePage = () => {
           setCroppingStatus={setIsCropping}
         />
 
-        {/* Show the "Create Post" button when not cropping and form is hidden */}
         {!isCropping && !showForm && (
           <button onClick={handleToggleForm} className="create-thread-button">
             Create Post
           </button>
         )}
 
-        {/* Only show the form when the user clicks "Create Post" */}
         {showForm && (
           <form onSubmit={handleCreateThread} className="thread-form">
             <h2 className="create-thread-title">Create Post</h2>
@@ -229,7 +268,6 @@ const HomePage = () => {
           </form>
         )}
 
-        {/* Only show threads when the form is not visible */}
         {!showForm && threads.length > 0 && (
           <div className="thread-list">
             <h3>Recent Posts:</h3>
@@ -263,7 +301,6 @@ const HomePage = () => {
                 <p className="thread-content">{thread.content}</p>
                 <p className="thread-comments">Comments: {thread.comments}</p>
 
-                {/* Comments section */}
                 {selectedThread?.forumThreadId === thread.forumThreadId && (
                   <div className="thread-details">
                     <h3 className="comments-header">Comments:</h3>
@@ -278,7 +315,6 @@ const HomePage = () => {
                                 alt="User profile"
                                 className="profile-picture-small"
                               />
-                           
                             ) : (
                               <img
                                 src={Placeholder}
