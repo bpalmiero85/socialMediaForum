@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,9 @@ import com.example.socialMediaForum.service.ThreadService;
 public class ForumThreadController {
   @Autowired
   private ThreadService threadService;
+
+  @Autowired
+  private SimpMessagingTemplate messagingTemplate;
 
   @GetMapping(produces = "application/json")
   public ResponseEntity<List<ForumThread>> getAllThreads() {
@@ -47,6 +51,8 @@ public class ForumThreadController {
         return ResponseEntity.badRequest().body("Title and content must be provided");
       }
       ForumThread savedThread = threadService.createThread(forumThread, username, profilePicture != null ? profilePicture : "");
+
+      messagingTemplate.convertAndSend("/topic/threads", savedThread);
       return ResponseEntity.ok(savedThread);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.badRequest().body(e.getMessage());
