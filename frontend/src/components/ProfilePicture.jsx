@@ -45,7 +45,7 @@ const getCroppedImg = async (imageSrc, crop) => {
       resolve(blob);
     }, "image/png");
   });
-}
+};
 
 const ProfilePicture = ({
   onUpload,
@@ -61,7 +61,9 @@ const ProfilePicture = ({
   const [isCropping, setIsCropping] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  const [profilePicture, setProfilePicture] = useState(user?.profilePicture || null);
+  const [profilePicture, setProfilePicture] = useState(
+    user?.profilePicture || null
+  );
 
   useEffect(() => {
     if (user?.profilePicture) {
@@ -121,7 +123,7 @@ const ProfilePicture = ({
 
       setProfilePicture(data.profilePicture);
       setIsPictureUploaded(true);
-      onUpload(); 
+      onUpload();
       setIsCropping(false);
       setCroppingStatus(false);
     } catch (e) {
@@ -147,10 +149,14 @@ const ProfilePicture = ({
                   onZoomChange={setZoom}
                 />
               </div>
-              <button onClick={handleCropAndUpload} className="crop-button">
-                Crop & Save
-              </button>
+              {isCropping && (
+                <div className="crop-button-container">
+                <button onClick={handleCropAndUpload} className="crop-button">Crop & Save</button>
+              </div>
+              )}
+             
             </>
+            
           ) : profilePicture ? (
             <div className="profile-picture">
               <img

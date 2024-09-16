@@ -46,6 +46,13 @@ body {
   justify-content: center;
 }
 
+.crop-button-container {
+  width: 350px;
+  display: flex;
+  justify-content: center;
+  margin-top: 15px; 
+}
+
 .crop-button {
   padding: 10px 20px;
   border-radius: 5px;
@@ -54,10 +61,10 @@ body {
   border: none;
   font-size: 1rem;
   cursor: pointer;
-  display: flex;
   margin-bottom: 10px;
-  margin-left: 65px;
+  display: flex;
   justify-content: center;
+
 }
 
 .crop-button:hover {
@@ -70,7 +77,7 @@ body {
   cursor: pointer;
   display: flex;
   margin-bottom: 10px;
-  margin-left: 65px;
+  display: flex;
   justify-content: center;
 }
 
