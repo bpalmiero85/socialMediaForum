@@ -12,23 +12,16 @@ const HomePage = () => {
   const [content, setContent] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [showUploadPic, setShowUploadPic] = useState(false);
   const [threads, setThreads] = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState("");
   const [showCreateButton, setShowCreateButton] = useState(true);
-  const [homeAnimation, setHomeAnimation] = useState([]);
   const [isCropping, setIsCropping] = useState(false);
 
   useEffect(() => {
     fetchThreads();
-    triggerHomeAnimation();
   }, []);
-
-  const handleCroppingStatusChange = (croppingStatus) => {
-    setIsCropping(croppingStatus);
-  };
 
   const fetchThreads = async () => {
     try {
@@ -36,55 +29,40 @@ const HomePage = () => {
         credentials: "include",
       });
 
-      const textResponse = await response.text();
-      console.log("Raw response:", textResponse);
-
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        const data = JSON.parse(textResponse);
-        setThreads(data);
-      } else {
-        throw new Error("Expected JSON, got something else");
-      }
+      const data = await response.json();
+      setThreads(data);
     } catch (error) {
       console.error("Error fetching threads:", error);
     }
   };
 
-  const triggerHomeAnimation = () => {
-    const spans = Array.from(document.querySelectorAll(".home-header span"));
+  const fetchComments = async (threadId) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/posts/thread/${threadId}`,
+        {
+          credentials: "include",
+        }
+      );
 
-    spans.forEach((span, idx) => {
-      span.addEventListener("click", (e) => {
-        e.target.classList.add("active");
-      });
-
-      setTimeout(() => {
-        span.classList.add("active");
-      }, 750 * (idx + 1));
-    });
-
-    setHomeAnimation(spans);
-  };
-
-  const handleToggleForm = () => {
-    setShowForm(!showForm);
-    setShowCreateButton(!showForm);
-  };
-
-  const handleToggleUpload = () => {
-    setShowUploadPic(true);
-  };
-
-  const handlePictureUpload = () => {
-    setIsPictureUploaded(true);
-    setShowUploadPic(true);
-    setShowCreateButton(true);
+      if (response.ok) {
+        const data = await response.json();
+        setComments(data);
+      } else {
+        throw new Error("Error fetching comments");
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
   };
 
   const handleThreadClick = (thread) => {
     setSelectedThread(thread);
     fetchComments(thread.forumThreadId);
+  };
+
+  const handleToggleForm = () => {
+    setShowForm(!showForm);
   };
 
   const handleCreateThread = async (e) => {
@@ -95,20 +73,13 @@ const HomePage = () => {
       return;
     }
 
-    const profilePicture = user.profilePicture ? user.profilePicture : "";
-
-    console.log({
-      username: user?.username,
-      profilePicture: user.profilePicture,
-      title,
-      content,
-    });
-
     try {
       const response = await fetch(
         `http://localhost:8080/threads?username=${encodeURIComponent(
           user.username
-        )}&profilePicture=${encodeURIComponent(profilePicture)}`,
+        )}&profilePicture=${encodeURIComponent(
+          user.profilePicture || ""
+        )}`,
         {
           method: "POST",
           headers: {
@@ -124,55 +95,17 @@ const HomePage = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Error creating thread: ${errorText}`);
-        throw new Error(`Error: ${response.statusText}`);
+        throw new Error(`Error: ${errorText}`);
       }
 
-      const textResponse = await response.text();
-      console.log("Raw response:", textResponse);
-
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        const newThread = JSON.parse(textResponse);
-        setThreads([newThread, ...threads]);
-        setTitle("");
-        setContent("");
-        setShowForm(false);
-        setShowCreateButton(true);
-      } else {
-        throw new Error("Expected JSON, got something else");
-      }
+      const newThread = await response.json();
+      setThreads([newThread, ...threads]);
+      setTitle("");
+      setContent("");
+      setShowForm(false); 
     } catch (error) {
       console.error("Error creating post:", error);
     }
-  };
-
-  const fetchComments = async (threadId) => {
-    try {
-      const response = await fetch(
-        `http://localhost:8080/posts/thread/${threadId}`,
-        {
-          credentials: "include",
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        const data = await response.json();
-        setComments(data);
-      } else {
-        throw new Error("Expected JSON, got something else");
-      }
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-    }
-  };
-
-  const handleCancelCreateThread = () => {
-    setShowForm(false);
-    setShowCreateButton(true);
   };
 
   const handleCreateComment = async (e) => {
@@ -183,15 +116,11 @@ const HomePage = () => {
       return;
     }
 
-    const profilePicture = user.profilePicture
-      ? user.profilePicture
-      : Placeholder;
-
     try {
       const response = await fetch(
         `http://localhost:8080/posts?username=${encodeURIComponent(
           user.username
-        )}&profilePicture=${encodeURIComponent(profilePicture)}`,
+        )}&profilePicture=${encodeURIComponent(user.profilePicture || "")}`,
         {
           method: "POST",
           headers: {
@@ -206,27 +135,27 @@ const HomePage = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error("Error creating comment.");
       }
 
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        const newComment = await response.json();
-        setComments([newComment, ...comments]);
-        setCommentContent("");
+      const newComment = await response.json();
 
-        setThreads((prevThreads) =>
-          prevThreads.map((thread) =>
-            thread.forumThreadId === selectedThread.forumThreadId
-              ? { ...thread, comments: thread.comments + 1 }
-              : thread
-          )
-        );
-      } else {
-        throw new Error("Expected JSON, got something else");
-      }
+     
+      setComments([newComment, ...comments]);
+      setThreads((prevThreads) =>
+        prevThreads.map((thread) =>
+          thread.forumThreadId === selectedThread.forumThreadId
+            ? { ...thread, comments: thread.comments + 1 }
+            : thread
+        )
+      );
+
+      setCommentContent("");
+
+      fetchThreads();
+      fetchComments(selectedThread.forumThreadId);
     } catch (error) {
-      console.error("Error creating comment", error);
+      console.error("Error creating comment:", error);
     }
   };
 
@@ -252,63 +181,56 @@ const HomePage = () => {
         </div>
 
         <ProfilePicture
-          onUpload={handlePictureUpload}
+          onUpload={() => setIsPictureUploaded(true)}
           isPictureUploaded={isPictureUploaded}
           setIsPictureUploaded={setIsPictureUploaded}
-          setCroppingStatus={handleCroppingStatusChange}
+          setCroppingStatus={setIsCropping}
         />
 
-        {!showForm && showCreateButton && !isPictureUploaded && (
+        {/* Show the "Create Post" button when not cropping and form is hidden */}
+        {!isCropping && !showForm && (
           <button onClick={handleToggleForm} className="create-thread-button">
             Create Post
           </button>
         )}
 
-        {isPictureUploaded && showCreateButton && !showForm && (
-          <button onClick={handleToggleForm} className="create-thread-button">
-            Create Post
-          </button>
-        )}
-
+        {/* Only show the form when the user clicks "Create Post" */}
         {showForm && (
-          <>
-            <form onSubmit={handleCreateThread} className="thread-form">
-              <h2 className="create-thread-title">Create Post</h2>
-              <label className="thread-input">
-                Title:
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                />
-              </label>
-              <br />
-              <label className="thread-input">
-                Content:
-                <textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  required
-                />
-              </label>
-              <button type="submit" className="create-button">
-                Post
-              </button>
-              <button
-                onClick={handleCancelCreateThread}
-                className="cancel-thread-button"
-              >
-                Cancel
-              </button>
-            </form>
-          </>
-        )}
-        {successMessage && (
-          <div className="success-message">{successMessage}</div>
+          <form onSubmit={handleCreateThread} className="thread-form">
+            <h2 className="create-thread-title">Create Post</h2>
+            <label className="thread-input">
+              Title:
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
+            </label>
+            <br />
+            <label className="thread-input">
+              Content:
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                required
+              />
+            </label>
+            <button type="submit" className="create-button">
+              Post
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="cancel-thread-button"
+            >
+              Cancel
+            </button>
+          </form>
         )}
 
-        {threads.length > 0 && (
+        {/* Only show threads when the form is not visible */}
+        {!showForm && threads.length > 0 && (
           <div className="thread-list">
             <h3>Recent Posts:</h3>
 
@@ -341,33 +263,7 @@ const HomePage = () => {
                 <p className="thread-content">{thread.content}</p>
                 <p className="thread-comments">Comments: {thread.comments}</p>
 
-                {showForm && (
-                  <form onSubmit={handleCreateThread} className="thread-form">
-                    <input
-                      type="text"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      required
-                      placeholder="Title"
-                    />
-                    <textarea
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      required
-                      placeholder="Content"
-                    ></textarea>
-                    <button type="submit" className="submit-thread-button">
-                      Submit
-                    </button>
-                    <button
-                      onClick={handleToggleForm}
-                      className="cancel-button"
-                    >
-                      Cancel
-                    </button>
-                  </form>
-                )}
-
+                {/* Comments section */}
                 {selectedThread?.forumThreadId === thread.forumThreadId && (
                   <div className="thread-details">
                     <h3 className="comments-header">Comments:</h3>
@@ -382,6 +278,7 @@ const HomePage = () => {
                                 alt="User profile"
                                 className="profile-picture-small"
                               />
+                           
                             ) : (
                               <img
                                 src={Placeholder}
@@ -393,7 +290,6 @@ const HomePage = () => {
                               {comment.user?.username || "Unknown User"}
                             </p>
                           </div>
-
                           <p className="comment-created-at">
                             {comment.postCreatedAt}
                           </p>
