@@ -12,17 +12,13 @@ const HomePage = () => {
   const [isPictureUploaded, setIsPictureUploaded] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showForm, setShowForm] = useState(false);
   const [threads, setThreads] = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState("");
-  const [showCreateButton, setShowCreateButton] = useState(true);
-
-  const [isCropping, setIsCropping] = useState(false);
-
   const [stompClient, setStompClient] = useState(null);
+  const [isCropping, setIsCropping] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     fetchThreads();
@@ -71,46 +67,47 @@ const HomePage = () => {
     const stompClient = Stomp.over(socket);
 
     stompClient.connect(
-      {},
-      (frame) => {
-        console.log("Connected to WebSocket", frame);
+        {},
+        (frame) => {
+            console.log("Connected to WebSocket", frame);
 
-        stompClient.subscribe("/topic/threads", (message) => {
-          const newThread = JSON.parse(message.body);
-          setThreads((prevThreads) => [newThread, ...prevThreads]);
-        });
+            stompClient.subscribe("/topic/threads", (message) => {
+                const newThread = JSON.parse(message.body);
+                setThreads((prevThreads) => [newThread, ...prevThreads]);
+            });
 
-        stompClient.subscribe("/topic/comments", (message) => {
-          const newComment = JSON.parse(message.body);
+            stompClient.subscribe("/topic/comments", (message) => {
+                const newComment = JSON.parse(message.body);
 
-          setThreads((prevThreads) =>
-            prevThreads.map((thread) =>
-              thread.forumThreadId === newComment.threadId
-                ? { ...thread, comments: thread.comments + 1 }
-                : thread
-            )
-          );
+               
+                if (!newComment.thread || !newComment.thread.forumThreadId) {
+                    console.error("Thread data is missing in the new comment:", newComment);
+                    return; 
+                }
 
-          if (selectedThread?.forumThreadId === newComment.threadId) {
-            setComments((prevComments) => [newComment, ...prevComments]);
-          }
-        });
-      },
-      (error) => {
-        console.error("Error connecting to WebSocket:", error);
-      }
+                setThreads((prevThreads) =>
+                    prevThreads.map((threadItem) =>
+                        threadItem.forumThreadId === newComment.thread.forumThreadId
+                            ? { ...threadItem, comments: threadItem.comments + 1 }
+                            : threadItem
+                    )
+                );
+
+                if (selectedThread?.forumThreadId === newComment.thread.forumThreadId) {
+                    setComments((prevComments) => [newComment, ...prevComments]);
+                }
+            });
+        },
+        (error) => {
+            console.error("Error connecting to WebSocket:", error);
+        }
     );
 
     setStompClient(stompClient);
-  };
-
+};
   const handleThreadClick = (thread) => {
     setSelectedThread(thread);
     fetchComments(thread.forumThreadId);
-  };
-
-  const handleToggleForm = () => {
-    setShowForm(!showForm);
   };
 
   const handleCreateThread = async (e) => {
@@ -187,10 +184,10 @@ const HomePage = () => {
       const newComment = await response.json();
       setComments([newComment, ...comments]);
       setThreads((prevThreads) =>
-        prevThreads.map((thread) =>
-          thread.forumThreadId === selectedThread.forumThreadId
-            ? { ...thread, comments: thread.comments + 1 }
-            : thread
+        prevThreads.map((t) =>
+          t.forumThreadId === selectedThread.forumThreadId
+            ? { ...t, comments: t.comments + 1 }
+            : t
         )
       );
 
@@ -229,7 +226,10 @@ const HomePage = () => {
         />
 
         {!isCropping && !showForm && (
-          <button onClick={handleToggleForm} className="create-thread-button">
+          <button
+            onClick={() => setShowForm(true)}
+            className="create-thread-button"
+          >
             Create Post
           </button>
         )}
@@ -246,7 +246,6 @@ const HomePage = () => {
                 required
               />
             </label>
-            <br />
             <label className="thread-input">
               Content:
               <textarea

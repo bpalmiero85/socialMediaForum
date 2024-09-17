@@ -19,7 +19,7 @@ public class PostController {
   private PostService postService;
 
   @Autowired
-  private SimpMessagingTemplate messagingTemplate; 
+  private SimpMessagingTemplate messagingTemplate;
 
   @GetMapping("/thread/{forumThreadId}")
   public List<Post> getAllPostsByThreadId(@PathVariable Long forumThreadId) {
@@ -33,11 +33,18 @@ public class PostController {
   }
 
   @PostMapping
-  public ResponseEntity<Post> createPost(@RequestBody Post post, @RequestParam String username, @RequestParam(required = false) String profilePicture) {
+  public ResponseEntity<Post> createPost(@RequestBody Post post, @RequestParam String username,
+      @RequestParam(required = false) String profilePicture) {
     try {
+
       Post newPost = postService.createPost(post, username, profilePicture);
 
-      messagingTemplate.convertAndSend("/topic/thread" + newPost.getThread() + "/comments", newPost);
+      if (newPost.getThread() == null || newPost.getThread().getForumThreadId() == null) {
+        return ResponseEntity.badRequest().body(null);
+      }
+
+      messagingTemplate.convertAndSend("/topic/comments", newPost);
+
       return ResponseEntity.ok(newPost);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.badRequest().body(null);

@@ -44,6 +44,10 @@ public class SecurityConfig {
             config.addAllowedMethod(HttpMethod.GET);
             config.addAllowedMethod(HttpMethod.POST);
             config.addAllowedMethod(HttpMethod.DELETE);
+            config.addAllowedMethod(HttpMethod.PUT);
+            config.addAllowedMethod(HttpMethod.OPTIONS);
+            config.addAllowedMethod("PATCH");
+            config.addAllowedMethod("HEAD");
             source.registerCorsConfiguration("/**", config);
             return new CorsFilter(source);
         }
@@ -76,6 +80,7 @@ public class SecurityConfig {
                         .antMatchers(HttpMethod.DELETE, "/posts/**").permitAll()
                         .antMatchers("/h2-console/**").permitAll()
                         .antMatchers("/uploads/**").permitAll()
+                        .antMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
                         .and()
                         .formLogin()
