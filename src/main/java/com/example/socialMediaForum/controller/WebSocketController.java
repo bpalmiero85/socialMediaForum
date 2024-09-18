@@ -1,5 +1,6 @@
 package com.example.socialMediaForum.controller;
 
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
@@ -9,9 +10,9 @@ import com.example.socialMediaForum.model.ForumThread;
 @Controller
 public class WebSocketController {
 
-  @MessageMapping("/comments")
-  @SendTo("/topic/comments")
-  public Post sendComment(Post comment) {
+  @MessageMapping("/comments/{threadId}")
+  @SendTo("/topic/comments/{threadId}")
+  public Post sendComment(@DestinationVariable String threadId, Post comment) {
     return comment;
   }
 

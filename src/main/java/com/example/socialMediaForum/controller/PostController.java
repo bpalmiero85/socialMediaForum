@@ -1,5 +1,6 @@
 package com.example.socialMediaForum.controller;
 
+import com.example.socialMediaForum.model.ForumThread;
 import com.example.socialMediaForum.model.Post;
 import com.example.socialMediaForum.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,15 +37,21 @@ public class PostController {
   public ResponseEntity<Post> createPost(@RequestBody Post post, @RequestParam String username,
       @RequestParam(required = false) String profilePicture) {
     try {
-
       Post newPost = postService.createPost(post, username, profilePicture);
-
+  
       if (newPost.getThread() == null || newPost.getThread().getForumThreadId() == null) {
         return ResponseEntity.badRequest().body(null);
       }
-
+  
+     
       messagingTemplate.convertAndSend("/topic/comments", newPost);
-
+  
+      
+      ForumThread updatedThread = newPost.getThread();
+  
+     
+      messagingTemplate.convertAndSend("/topic/threads", updatedThread);
+  
       return ResponseEntity.ok(newPost);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.badRequest().body(null);
