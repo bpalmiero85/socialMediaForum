@@ -19,6 +19,7 @@ const HomePage = () => {
   const [stompClient, setStompClient] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [commentSubscription, setCommentSubscription] = useState(null);
 
   useEffect(() => {
     fetchThreads();
@@ -65,7 +66,7 @@ const HomePage = () => {
   const connectWebSocket = () => {
     const socketUrl = "http://localhost:8080/ws";
     const socket = new SockJS(socketUrl);
-  
+
     const stompClient = new Client({
       webSocketFactory: () => socket,
       debug: (str) => console.log(str),
@@ -74,11 +75,10 @@ const HomePage = () => {
       heartbeatOutgoing: 4000,
       onConnect: (frame) => {
         console.log("Connected to WebSocket", frame);
-  
-       
+
         stompClient.subscribe("/topic/threads", (message) => {
           const updatedThread = JSON.parse(message.body);
-  
+
           setThreads((prevThreads) => {
             const threadExists = prevThreads.some(
               (thread) => thread.forumThreadId === updatedThread.forumThreadId
@@ -94,40 +94,6 @@ const HomePage = () => {
             }
           });
         });
-  
-       
-        stompClient.subscribe("/topic/comments", (message) => {
-          const newComment = JSON.parse(message.body);
-  
-          if (!newComment.thread || !newComment.thread.forumThreadId) {
-            console.error("Thread data is missing in the new comment:", newComment);
-            return;
-          }
-  
-          setThreads((prevThreads) =>
-            prevThreads.map((threadItem) =>
-              threadItem.forumThreadId === newComment.thread.forumThreadId
-                ? { ...threadItem, comments: threadItem.comments + 1 }
-                : threadItem
-            )
-          );
-  
-         
-          if (
-            selectedThread?.forumThreadId === newComment.thread.forumThreadId
-          ) {
-            setComments((prevComments) => {
-              if (
-                prevComments.some(
-                  (comment) => comment.postId === newComment.postId
-                )
-              ) {
-                return prevComments;
-              }
-              return [newComment, ...prevComments];
-            });
-          }
-        });
       },
       onStompError: (frame) => {
         console.error("Broker reported error: ", frame.headers["message"]);
@@ -137,31 +103,40 @@ const HomePage = () => {
         console.error("WebSocket closed: ", event);
       },
     });
-  
+
     stompClient.activate();
     setStompClient(stompClient);
   };
 
   const handleThreadClick = (thread) => {
-    setSelectedThread(thread);
-    fetchComments(thread.forumThreadId); 
-  
-    
     if (stompClient && stompClient.connected) {
-      stompClient.unsubscribe("/topic/comments/" + selectedThread?.forumThreadId); 
+      if (selectedThread?.forumThreadId) {
+        stompClient.unsubscribe(
+          `/topic/comments/${selectedThread.forumThreadId}`
+        );
+      }
     }
-  
-   
+
+    setSelectedThread(thread);
+    fetchComments(thread.forumThreadId);
+
     if (stompClient && stompClient.connected) {
-      stompClient.subscribe(`/topic/comments/${thread.forumThreadId}`, (message) => {
-        const newComment = JSON.parse(message.body);
-        setComments((prevComments) => {
-          if (!prevComments.some((comment) => comment.postId === newComment.postId)) {
-            return [newComment, ...prevComments];
-          }
-          return prevComments;
-        });
-      });
+      stompClient.subscribe(
+        `/topic/comments/${thread.forumThreadId}`,
+        (message) => {
+          const newComment = JSON.parse(message.body);
+          setComments((prevComments) => {
+            if (
+              !prevComments.some(
+                (comment) => comment.postId === newComment.postId
+              )
+            ) {
+              return [newComment, ...prevComments];
+            }
+            return prevComments;
+          });
+        }
+      );
     }
   };
 

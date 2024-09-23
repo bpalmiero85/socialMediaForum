@@ -38,20 +38,17 @@ public class PostController {
       @RequestParam(required = false) String profilePicture) {
     try {
       Post newPost = postService.createPost(post, username, profilePicture);
-  
+
       if (newPost.getThread() == null || newPost.getThread().getForumThreadId() == null) {
         return ResponseEntity.badRequest().body(null);
       }
-  
-     
-      messagingTemplate.convertAndSend("/topic/comments", newPost);
-  
-      
+
+      messagingTemplate.convertAndSend("/topic/comments/" + newPost.getThread().getForumThreadId(), newPost);
+
       ForumThread updatedThread = newPost.getThread();
-  
-     
+      updatedThread.setComments(updatedThread.getComments() + 1);
       messagingTemplate.convertAndSend("/topic/threads", updatedThread);
-  
+
       return ResponseEntity.ok(newPost);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.badRequest().body(null);
