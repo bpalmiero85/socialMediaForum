@@ -46,7 +46,6 @@ public class PostController {
       messagingTemplate.convertAndSend("/topic/comments/" + newPost.getThread().getForumThreadId(), newPost);
 
       ForumThread updatedThread = newPost.getThread();
-      updatedThread.setComments(updatedThread.getComments() + 1);
       messagingTemplate.convertAndSend("/topic/threads", updatedThread);
 
       return ResponseEntity.ok(newPost);

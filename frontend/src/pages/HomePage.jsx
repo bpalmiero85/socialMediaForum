@@ -110,18 +110,16 @@ const HomePage = () => {
 
   const handleThreadClick = (thread) => {
     if (stompClient && stompClient.connected) {
-      if (selectedThread?.forumThreadId) {
-        stompClient.unsubscribe(
-          `/topic/comments/${selectedThread.forumThreadId}`
-        );
+      if (commentSubscription) {
+        commentSubscription.unsubscribe(); // Unsubscribe from previous thread's comments
       }
     }
-
+  
     setSelectedThread(thread);
     fetchComments(thread.forumThreadId);
-
+  
     if (stompClient && stompClient.connected) {
-      stompClient.subscribe(
+      const subscription = stompClient.subscribe(
         `/topic/comments/${thread.forumThreadId}`,
         (message) => {
           const newComment = JSON.parse(message.body);
@@ -137,6 +135,7 @@ const HomePage = () => {
           });
         }
       );
+      setCommentSubscription(subscription); 
     }
   };
 

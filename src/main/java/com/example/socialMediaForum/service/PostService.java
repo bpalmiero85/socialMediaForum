@@ -47,9 +47,10 @@ public class PostService {
     post.setPostCreatedAt(LocalDateTime.now());
     post.setPostLastUpdatedAt(LocalDateTime.now());
 
+    forumThread.setComments(forumThread.getComments() + 1);
+
     Post savedPost = postRepository.save(post);
 
-    forumThread.setComments(forumThread.getComments() + 1);
     forumThreadRepository.save(forumThread);
 
     return savedPost;
