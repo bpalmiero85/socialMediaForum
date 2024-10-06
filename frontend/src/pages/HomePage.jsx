@@ -111,13 +111,13 @@ const HomePage = () => {
   const handleThreadClick = (thread) => {
     if (stompClient && stompClient.connected) {
       if (commentSubscription) {
-        commentSubscription.unsubscribe(); // Unsubscribe from previous thread's comments
+        commentSubscription.unsubscribe();
       }
     }
-  
+
     setSelectedThread(thread);
     fetchComments(thread.forumThreadId);
-  
+
     if (stompClient && stompClient.connected) {
       const subscription = stompClient.subscribe(
         `/topic/comments/${thread.forumThreadId}`,
@@ -135,7 +135,18 @@ const HomePage = () => {
           });
         }
       );
-      setCommentSubscription(subscription); 
+      setCommentSubscription(subscription);
+
+      const deletedSubscription = stompClient.subscribe(
+        `/topic/comments/deleted/${thread.forumThreadId}`,
+        (message) => {
+          const deletedPostId = JSON.parse(message.body);
+          setComments((prevComments) =>
+            prevComments.filter((comment) => comment.postId !== deletedPostId)
+          );
+        }
+      );
+      setCommentSubscription(deletedSubscription);
     }
   };
 
@@ -226,6 +237,37 @@ const HomePage = () => {
       setCommentContent("");
     } catch (error) {
       console.error("Error creating comment:", error);
+    }
+  };
+
+  const handleDeleteComment = async (postId) => {
+    if (!user || !user.username) {
+      console.error("User not available. Please log in.");
+      return;
+    }
+
+    console.log("Deleting comment with postId:", postId);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/posts/${postId}?username=${encodeURIComponent(
+          user.username
+        )}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Error deleting comment.");
+      }
+
+      setComments((prevComments) =>
+        prevComments.filter((comment) => comment.postId !== postId)
+      );
+    } catch (error) {
+      console.error("Error deleting comment:", error);
     }
   };
 
@@ -360,6 +402,17 @@ const HomePage = () => {
                           <p className="comment-created-at">
                             {comment.postCreatedAt}
                           </p>
+
+                          {user?.username === comment.user?.username && (
+                            <button
+                              className="delete-comment-button"
+                              onClick={() =>
+                                handleDeleteComment(comment.postId)
+                              }
+                            >
+                              Delete
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
