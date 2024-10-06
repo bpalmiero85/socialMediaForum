@@ -136,6 +136,17 @@ const HomePage = () => {
         }
       );
       setCommentSubscription(subscription);
+
+      const deletedSubscription = stompClient.subscribe(
+        `/topic/comments/deleted/${thread.forumThreadId}`,
+        (message) => {
+          const deletedPostId = JSON.parse(message.body);
+          setComments((prevComments) =>
+            prevComments.filter((comment) => comment.postId !== deletedPostId)
+          );
+        }
+      );
+      setCommentSubscription(deletedSubscription);
     }
   };
 
@@ -234,19 +245,24 @@ const HomePage = () => {
       console.error("User not available. Please log in.");
       return;
     }
-  
-    console.log("Deleting comment with postId:", postId); 
-  
+
+    console.log("Deleting comment with postId:", postId);
+
     try {
-      const response = await fetch(`http://localhost:8080/posts/${postId}?username=${encodeURIComponent(user.username)}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-  
+      const response = await fetch(
+        `http://localhost:8080/posts/${postId}?username=${encodeURIComponent(
+          user.username
+        )}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
       if (!response.ok) {
         throw new Error("Error deleting comment.");
       }
-  
+
       setComments((prevComments) =>
         prevComments.filter((comment) => comment.postId !== postId)
       );

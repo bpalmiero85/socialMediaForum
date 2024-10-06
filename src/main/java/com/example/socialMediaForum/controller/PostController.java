@@ -70,12 +70,18 @@ public class PostController {
     Optional<Post> optionalPost = postService.getPostById(postId);
     if (optionalPost.isPresent()) {
       Post post = optionalPost.get();
+      ForumThread forumThread = post.getThread();
 
       if (!post.getUser().getUsername().equals(username)) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
       }
 
       postService.deletePost(postId);
+
+      messagingTemplate.convertAndSend("/topic/threads", forumThread);
+
+      messagingTemplate.convertAndSend("/topic/comments/deleted/" + forumThread.getForumThreadId(), postId);
+      
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.badRequest().build();
