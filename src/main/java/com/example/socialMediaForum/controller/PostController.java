@@ -4,6 +4,7 @@ import com.example.socialMediaForum.model.ForumThread;
 import com.example.socialMediaForum.model.Post;
 import com.example.socialMediaForum.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -65,11 +66,18 @@ public class PostController {
   }
 
   @DeleteMapping("/{postId}")
-  public ResponseEntity<Void> deletePost(@PathVariable Long postId) {
-    boolean isDeleted = postService.deletePost(postId);
-    if (!isDeleted) {
-      return ResponseEntity.notFound().build();
+  public ResponseEntity<Void> deletePost(@PathVariable Long postId, @RequestParam String username) {
+    Optional<Post> optionalPost = postService.getPostById(postId);
+    if (optionalPost.isPresent()) {
+      Post post = optionalPost.get();
+
+      if (!post.getUser().getUsername().equals(username)) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+
+      postService.deletePost(postId);
+      return ResponseEntity.noContent().build();
     }
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.badRequest().build();
   }
 }
