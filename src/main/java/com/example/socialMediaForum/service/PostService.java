@@ -59,7 +59,14 @@ public class PostService {
   public boolean deletePost(Long postId) {
     Optional<Post> optionalPost = postRepository.findById(postId);
     if (optionalPost.isPresent()) {
-      postRepository.delete(optionalPost.get());
+      Post post = optionalPost.get();
+      ForumThread forumThread = post.getThread();
+
+      forumThread.setComments(forumThread.getComments() - 1);
+
+      forumThreadRepository.save(forumThread);
+
+      postRepository.delete(post);
       return true;
     }
     return false;
