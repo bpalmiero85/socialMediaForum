@@ -78,7 +78,6 @@ const HomePage = () => {
 
         stompClient.subscribe("/topic/threads", (message) => {
           const updatedThread = JSON.parse(message.body);
-
           setThreads((prevThreads) => {
             const threadExists = prevThreads.some(
               (thread) => thread.forumThreadId === updatedThread.forumThreadId
@@ -106,11 +105,7 @@ const HomePage = () => {
 
     stompClient.activate();
     setStompClient(stompClient);
-
-    
   };
-
-  
 
   const handleThreadClick = (thread) => {
     if (stompClient && stompClient.connected) {
@@ -126,16 +121,20 @@ const HomePage = () => {
       const subscription = stompClient.subscribe(
         `/topic/comments/${thread.forumThreadId}`,
         (message) => {
-          const newComment = JSON.parse(message.body);
+          const updatedComment = JSON.parse(message.body);
           setComments((prevComments) => {
-            if (
-              !prevComments.some(
-                (comment) => comment.postId === newComment.postId
-              )
-            ) {
-              return [newComment, ...prevComments];
+            const commentExists = prevComments.some(
+              (comment) => comment.postId === updatedComment.postId
+            );
+            if (commentExists) {
+              return prevComments.map((comment) =>
+                comment.postId === updatedComment.postId
+                  ? updatedComment
+                  : comment
+              );
+            } else {
+              return [updatedComment, ...prevComments];
             }
-            return prevComments;
           });
         }
       );
@@ -300,7 +299,7 @@ const HomePage = () => {
     }
   };
 
-  const handleUpvoteThread = async () => {
+  const handleUpvoteThread = async (forumThreadId) => {
     try {
       const response = await fetch(
         `http://localhost:8080/threads/${forumThreadId}/upvotes`,
@@ -419,11 +418,12 @@ const HomePage = () => {
                 </div>
                 <p className="thread-created-at">{thread.createdAt}</p>
                 <p className="thread-content">{thread.content}</p>
-                <button className="like-button"
-                    onClick={() => handleUpvoteThread(thread.forumThreadId)}
-                  >
-                    👍 Like
-                  </button>
+                <button
+                  className="like-button"
+                  onClick={() => handleUpvoteThread(thread.forumThreadId)}
+                >
+                  👍 Like
+                </button>
                 <span className="post-likes">{thread.threadUpvotes} Likes</span>
                 <p className="thread-comments">Comments: {thread.comments}</p>
 
@@ -434,12 +434,15 @@ const HomePage = () => {
                       {comments.map((comment) => (
                         <div key={comment.postId} className="comment-item">
                           <p>{comment.postContent}</p>
-                          <button className="like-button"
+                          <button
+                            className="like-button"
                             onClick={() => handleUpvoteComment(comment.postId)}
                           >
-                           👍 Like
+                            👍 Like
                           </button>
-                          <span className="post-likes">{comment.postUpvotes} Likes</span>
+                          <span className="post-likes">
+                            {comment.postUpvotes} Likes
+                          </span>
                           <div className="thread-user-info">
                             {comment.user?.profilePicture ? (
                               <img
