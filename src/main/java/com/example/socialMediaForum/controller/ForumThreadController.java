@@ -1,6 +1,7 @@
 package com.example.socialMediaForum.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -36,8 +37,8 @@ public class ForumThreadController {
   }
 
   @GetMapping("/{forumThreadId}")
-  public ResponseEntity<ForumThread> getThreadById(@PathVariable Long forumThreadId) {
-    ForumThread forumThread = threadService.getThreadById(forumThreadId);
+  public ResponseEntity<Optional<ForumThread>> getThreadById(@PathVariable Long forumThreadId) {
+    Optional<ForumThread> forumThread = threadService.getThreadById(forumThreadId);
     if (forumThread == null) {
       return ResponseEntity.notFound().build();
     }
@@ -59,6 +60,21 @@ public class ForumThreadController {
     } catch (Exception e) {
       return ResponseEntity.status(500).body("An internal server error occurred.");
     }
+  }
+
+  @PostMapping("/{forumThreadId}/upvotes")
+  public ResponseEntity<ForumThread> upvoteThread(@PathVariable Long forumThreadId) {
+    Optional<ForumThread> optionalThread = threadService.getThreadById(forumThreadId);
+    if (optionalThread.isPresent()){
+      ForumThread thread = optionalThread.get();
+      thread.setThreadUpvotes(thread.getThreadUpvotes() + 1);
+      ForumThread updatedThread = threadService.save(thread);
+
+      messagingTemplate.convertAndSend("/topic/threads", updatedThread);
+
+      return ResponseEntity.ok(updatedThread);
+    }
+    return ResponseEntity.notFound().build();
   }
 
   @PutMapping("/{forumThreadId}")

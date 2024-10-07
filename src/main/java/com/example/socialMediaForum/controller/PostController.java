@@ -55,6 +55,22 @@ public class PostController {
     }
   }
 
+  @PostMapping("/{postId}/upvotes")
+  public ResponseEntity<Post> upvotePost(@PathVariable Long postId) {
+    Optional<Post> optionalPost = postService.getPostById(postId);
+
+    if (optionalPost.isPresent()) {
+      Post post = optionalPost.get();
+      post.setPostUpvotes(post.getPostUpvotes() + 1);
+      Post updatedPost = postService.save(post);
+
+      messagingTemplate.convertAndSend("/topic/comments/" + post.getThread().getForumThreadId(), updatedPost);
+
+      return ResponseEntity.ok(updatedPost);
+    }
+    return ResponseEntity.notFound().build();
+  }
+
   @PutMapping("/{postId}")
   public ResponseEntity<Post> updatePost(@PathVariable Long postId,
       @RequestBody Post postDetails) {
@@ -81,7 +97,7 @@ public class PostController {
       messagingTemplate.convertAndSend("/topic/threads", forumThread);
 
       messagingTemplate.convertAndSend("/topic/comments/deleted/" + forumThread.getForumThreadId(), postId);
-      
+
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.badRequest().build();

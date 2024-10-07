@@ -30,6 +30,8 @@ public class ForumThread {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
+  private int threadUpvotes;
+
   private int comments;
 
   private String title;

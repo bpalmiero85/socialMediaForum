@@ -64,9 +64,8 @@ public class ThreadService {
 
   }
 
-  public ForumThread getThreadById(Long forumThreadId) {
-    Optional<ForumThread> thread = forumThreadRepository.findById(forumThreadId);
-    return thread.orElse(null);
+  public Optional<ForumThread> getThreadById(Long forumThreadId) {
+    return forumThreadRepository.findById(forumThreadId);
   }
 
   public ForumThread save(ForumThread forumThread) {

@@ -106,7 +106,11 @@ const HomePage = () => {
 
     stompClient.activate();
     setStompClient(stompClient);
+
+    
   };
+
+  
 
   const handleThreadClick = (thread) => {
     if (stompClient && stompClient.connected) {
@@ -271,6 +275,49 @@ const HomePage = () => {
     }
   };
 
+  const handleUpvoteComment = async (postId) => {
+    if (!postId) {
+      console.error("No postId found for upvoting comment.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/posts/${postId}/upvotes`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Error upvoting comment.");
+      }
+
+      console.log(`Comment with postId ${postId} successfully upvoted.`);
+    } catch (error) {
+      console.error("Error liking comment:", error);
+    }
+  };
+
+  const handleUpvoteThread = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/threads/${forumThreadId}/upvotes`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Error liking post.");
+      }
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
+  };
+
   return (
     <div className="home-container">
       <div className="home-content">
@@ -372,6 +419,12 @@ const HomePage = () => {
                 </div>
                 <p className="thread-created-at">{thread.createdAt}</p>
                 <p className="thread-content">{thread.content}</p>
+                <button className="like-button"
+                    onClick={() => handleUpvoteThread(thread.forumThreadId)}
+                  >
+                    👍 Like
+                  </button>
+                <span className="post-likes">{thread.threadUpvotes} Likes</span>
                 <p className="thread-comments">Comments: {thread.comments}</p>
 
                 {selectedThread?.forumThreadId === thread.forumThreadId && (
@@ -381,6 +434,12 @@ const HomePage = () => {
                       {comments.map((comment) => (
                         <div key={comment.postId} className="comment-item">
                           <p>{comment.postContent}</p>
+                          <button className="like-button"
+                            onClick={() => handleUpvoteComment(comment.postId)}
+                          >
+                           👍 Like
+                          </button>
+                          <span className="post-likes">{comment.postUpvotes} Likes</span>
                           <div className="thread-user-info">
                             {comment.user?.profilePicture ? (
                               <img

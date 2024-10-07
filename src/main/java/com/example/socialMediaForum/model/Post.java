@@ -41,6 +41,6 @@ public class Post {
   @Column(name = "profile_picture")
   private String profilePicture;
 
-  private int upvotes;
+  private int postUpvotes;
 
 }
