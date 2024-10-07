@@ -107,6 +107,25 @@ const HomePage = () => {
     setStompClient(stompClient);
   };
 
+  useEffect(() => {
+    if (stompClient && stompClient.connected) {
+      const deletedThreadSubscription = stompClient.subscribe(
+        "/topic/threads/deleted",
+        (message) => {
+          const deletedThreadId = JSON.parse(message.body);
+          setThreads((prevThreads) =>
+            prevThreads.filter((thread) => thread.forumThreadId !== deletedThreadId)
+          );
+        }
+      );
+      return () => {
+        if (deletedThreadSubscription) {
+          deletedThreadSubscription.unsubscribe();
+        }
+      };
+    }
+  }, [stompClient]);
+
   const handleThreadClick = (thread) => {
     if (stompClient && stompClient.connected) {
       if (commentSubscription) {
@@ -274,6 +293,38 @@ const HomePage = () => {
     }
   };
 
+  const handleDeleteThread = async (forumThreadId) => {
+    if (!forumThreadId) {
+      console.error("No forumThreadId found for deleting thread.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/threads/${forumThreadId}?username=${encodeURIComponent(
+          user.username
+        )}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Error deleting thread.");
+      }
+
+      console.log(
+        `Thread with forumThreadId ${forumThreadId} successfully deleted.`
+      );
+
+      setThreads((prevThreads) =>
+        prevThreads.filter((thread) => thread.forumThreadId !== forumThreadId)
+      );
+    } catch (error) {
+      console.error("Error deleting thread:", error);
+    }
+  };
   const handleUpvoteComment = async (postId) => {
     if (!postId) {
       console.error("No postId found for upvoting comment.");
@@ -418,6 +469,14 @@ const HomePage = () => {
                 </div>
                 <p className="thread-created-at">{thread.createdAt}</p>
                 <p className="thread-content">{thread.content}</p>
+                {user?.username === thread.user?.username && (
+                  <button
+                    className="delete-comment-button"
+                    onClick={() => handleDeleteThread(thread.forumThreadId)}
+                  >
+                    Delete
+                  </button>
+                )}
                 <button
                   className="like-button"
                   onClick={() => handleUpvoteThread(thread.forumThreadId)}
