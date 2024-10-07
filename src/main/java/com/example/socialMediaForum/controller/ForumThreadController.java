@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -46,12 +47,14 @@ public class ForumThreadController {
   }
 
   @PostMapping(produces = "application/json")
-  public ResponseEntity<?> createThread(@RequestBody ForumThread forumThread, @RequestParam String username, @RequestParam(required = false) String profilePicture) {
+  public ResponseEntity<?> createThread(@RequestBody ForumThread forumThread, @RequestParam String username,
+      @RequestParam(required = false) String profilePicture) {
     try {
       if (forumThread == null || forumThread.getTitle() == null || forumThread.getContent() == null) {
         return ResponseEntity.badRequest().body("Title and content must be provided");
       }
-      ForumThread savedThread = threadService.createThread(forumThread, username, profilePicture != null ? profilePicture : "");
+      ForumThread savedThread = threadService.createThread(forumThread, username,
+          profilePicture != null ? profilePicture : "");
 
       messagingTemplate.convertAndSend("/topic/threads", savedThread);
       return ResponseEntity.ok(savedThread);
@@ -65,7 +68,7 @@ public class ForumThreadController {
   @PostMapping("/{forumThreadId}/upvotes")
   public ResponseEntity<ForumThread> upvoteThread(@PathVariable Long forumThreadId) {
     Optional<ForumThread> optionalThread = threadService.getThreadById(forumThreadId);
-    if (optionalThread.isPresent()){
+    if (optionalThread.isPresent()) {
       ForumThread thread = optionalThread.get();
       thread.setThreadUpvotes(thread.getThreadUpvotes() + 1);
       ForumThread updatedThread = threadService.save(thread);
@@ -88,11 +91,22 @@ public class ForumThreadController {
   }
 
   @DeleteMapping("/{forumThreadId}")
-  public ResponseEntity<Void> deleteThread(@PathVariable Long forumThreadId) {
-    boolean isDeleted = threadService.deleteForumThread(forumThreadId);
-    if (!isDeleted) {
-      return ResponseEntity.notFound().build();
+  public ResponseEntity<Void> deleteThread(@PathVariable Long forumThreadId, @RequestParam String username) {
+    Optional<ForumThread> optionalThread = threadService.getThreadById(forumThreadId);
+    if (optionalThread.isPresent()) {
+      ForumThread forumThread = optionalThread.get();
+
+      if (!forumThread.getUser().getUsername().equals(username)) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+
+      threadService.deleteForumThread(forumThreadId);
+
+      messagingTemplate.convertAndSend("/topic/threads/deleted", forumThreadId);
+
+      return ResponseEntity.noContent().build();
     }
-    return ResponseEntity.noContent().build();
+
+    return ResponseEntity.badRequest().build();
   }
 }
