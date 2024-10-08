@@ -114,7 +114,9 @@ const HomePage = () => {
         (message) => {
           const deletedThreadId = JSON.parse(message.body);
           setThreads((prevThreads) =>
-            prevThreads.filter((thread) => thread.forumThreadId !== deletedThreadId)
+            prevThreads.filter(
+              (thread) => thread.forumThreadId !== deletedThreadId
+            )
           );
         }
       );
@@ -169,6 +171,33 @@ const HomePage = () => {
         }
       );
       setCommentSubscription(deletedSubscription);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!user || !user.username) {
+      console.error("User not available. Please log in.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/user/${user.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Error deleting profile.");
+      }
+
+      await fetch("http://localhost:8080/user/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      console.alert("Profile deleted successfully.");
+      window.location.href = "/register";
+    } catch (error) {
+      console.error("Error deleting user:", error);
     }
   };
 
@@ -325,6 +354,7 @@ const HomePage = () => {
       console.error("Error deleting thread:", error);
     }
   };
+
   const handleUpvoteComment = async (postId) => {
     if (!postId) {
       console.error("No postId found for upvoting comment.");
@@ -395,6 +425,10 @@ const HomePage = () => {
           setIsPictureUploaded={setIsPictureUploaded}
           setCroppingStatus={setIsCropping}
         />
+
+        {user?.username && (
+          <button className="delete-profile" onClick={handleDeleteUser}>Delete Profile</button>
+        )}
 
         {!isCropping && !showForm && (
           <button
