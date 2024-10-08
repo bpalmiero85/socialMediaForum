@@ -299,6 +299,40 @@ body {
   height: 25px;
 }
 
+.delete-profile {
+  padding: 7px;
+  border-radius: 8px;
+  color: #ffffff;
+  background-color: #965afd;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 10px;
+  justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 200px;
+  width: auto;
+  height: 25px;
+}
+
+.delete-profile:hover {
+  padding: 7px;
+  border-radius: 8px;
+  color: #ffffff;
+  background-color: #5621b2;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 10px;
+  justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  height: 25px;
+  font-weight:bolder;
+}
+
 .like-button:hover {
   padding: 7px;
   border-radius: 8px;

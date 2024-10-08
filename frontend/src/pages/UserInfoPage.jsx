@@ -1,46 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import "../styles/UserInfo.css";
+import useFetchUser from "../components/FetchUser";
 
 const UserInfo = () => {
   const location = useLocation();
-  const username = new URLSearchParams(location.search).get("username");
-  const [user, setUser] = useState(null);
+  const { user, error, setUser } = useFetchUser();
   const [originalInfo, setOriginalInfo] = useState(null);
   const [validationError, setValidationError] = useState(null);
-  const [error, setError] = useState(null);
   const [isEdit, setIsEdit] = useState({
     firstName: false,
     lastName: false,
     email: false,
   });
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:8080/user/userinfo?username=${username}`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-          setOriginalInfo(userData);
-        } else {
-          setError("Error fetching user info");
-        }
-      } catch (error) {
-        setError("Error fetching user info");
-      }
-    };
-
-    if (username) {
-      fetchUser();
-    }
-  }, [username]);
+  if (user && !originalInfo) {
+    setOriginalInfo(user);
+  }
 
   const handleEdit = (field) => {
     setIsEdit((prev) => ({ ...prev, [field]: !prev[field] }));
@@ -78,11 +54,47 @@ const UserInfo = () => {
         setUser(updatedUser);
         setOriginalInfo(updatedUser);
         setIsEdit((prev) => ({ ...prev, [field]: false }));
+        console.log("User data updated successfully:", updatedUser); // Debug log
       } else {
         setError("Error updating user info");
       }
     } catch (error) {
       setError("Error updating user info");
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!user || !user.id) {
+      console.error("User ID not available for deletion");
+      return;
+    }
+
+    try {
+      console.log("Attempting to delete user with ID:", user.id);
+      const response = await fetch(`http://localhost:8080/user/${user.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Error deleting profile.");
+      }
+
+      console.log("User deleted successfully.");
+
+      const logoutResponse = await fetch("http://localhost:8080/user/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!logoutResponse.ok) {
+        throw new Error("Error logging out.");
+      }
+
+      alert("Profile deleted successfully.");
+      window.location.href = "/register";
+    } catch (error) {
+      console.error("Error deleting user:", error.message);
     }
   };
 
@@ -101,13 +113,14 @@ const UserInfo = () => {
 
   return (
     <div className="user-info-page-container">
-     
-                    <img
-                      src={`http://localhost:8080/uploads/${user.profilePicture}`}
-                      alt="User profile"
-                      className="profile-picture-info"
-                    />
-                
+      {user.profilePicture && (
+        <img
+          src={`http://localhost:8080/uploads/${user.profilePicture}`}
+          alt="User profile"
+          className="profile-picture-info"
+        />
+      )}
+
       <div className="user-info-header">
         <h1>User Info</h1>
       </div>
@@ -122,7 +135,6 @@ const UserInfo = () => {
                   value={user.firstName}
                   onChange={(e) => handleChange("firstName", e.target.value)}
                 />
-
                 <button
                   className="user-edit-button"
                   onClick={(e) => handleSave("firstName", e)}
@@ -148,6 +160,7 @@ const UserInfo = () => {
               </div>
             )}
           </div>
+
           <div className="user-info-field">
             <strong>Last Name:</strong>
             {isEdit.lastName ? (
@@ -182,6 +195,7 @@ const UserInfo = () => {
               </div>
             )}
           </div>
+
           <div className="user-info-field">
             <strong>Email:</strong>
             {isEdit.email ? (
@@ -221,19 +235,27 @@ const UserInfo = () => {
               </div>
             )}
           </div>
+
           <div className="user-info-field">
             <strong>Username:</strong>
             <span>
-            {user.profilePicture && (  
-                    <img
-                      src={`http://localhost:8080/uploads/${user.profilePicture}`}
-                      alt="User profile"
-                      className="profile-picture-small"
-                    />
-                  )}{user.username}</span>
+              {user.profilePicture && (
+                <img
+                  src={`http://localhost:8080/uploads/${user.profilePicture}`}
+                  alt="User profile"
+                  className="profile-picture-small"
+                />
+              )}
+              {user.username}
+            </span>
           </div>
         </div>
       </div>
+      {user?.username && user?.id && (
+        <button className="delete-profile" onClick={handleDeleteUser}>
+          Delete Profile
+        </button>
+      )}
     </div>
   );
 };

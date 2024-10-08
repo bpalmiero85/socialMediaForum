@@ -174,33 +174,6 @@ const HomePage = () => {
     }
   };
 
-  const handleDeleteUser = async () => {
-    if (!user || !user.username) {
-      console.error("User not available. Please log in.");
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:8080/user/${user.id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Error deleting profile.");
-      }
-
-      await fetch("http://localhost:8080/user/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-      console.alert("Profile deleted successfully.");
-      window.location.href = "/register";
-    } catch (error) {
-      console.error("Error deleting user:", error);
-    }
-  };
-
   const handleCreateThread = async (e) => {
     e.preventDefault();
 
@@ -425,10 +398,6 @@ const HomePage = () => {
           setIsPictureUploaded={setIsPictureUploaded}
           setCroppingStatus={setIsCropping}
         />
-
-        {user?.username && (
-          <button className="delete-profile" onClick={handleDeleteUser}>Delete Profile</button>
-        )}
 
         {!isCropping && !showForm && (
           <button

@@ -46,8 +46,6 @@ public class SecurityConfig {
             config.addAllowedMethod(HttpMethod.DELETE);
             config.addAllowedMethod(HttpMethod.PUT);
             config.addAllowedMethod(HttpMethod.OPTIONS);
-            config.addAllowedMethod("PATCH");
-            config.addAllowedMethod("HEAD");
             source.registerCorsConfiguration("/**", config);
             return new CorsFilter(source);
         }

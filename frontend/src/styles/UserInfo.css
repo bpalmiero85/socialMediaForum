@@ -1,5 +1,6 @@
 .user-info-page-container {
   position: absolute;
+  padding-top: 100px;
   background-color: white;
   justify-content: center;
   align-items: center;
