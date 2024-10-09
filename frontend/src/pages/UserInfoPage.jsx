@@ -71,10 +71,11 @@ const UserInfo = () => {
 
     try {
       console.log("Attempting to delete user with ID:", user.id);
-      const response = await fetch(`http://localhost:8080/user/${user.id}`, {
+      const response = await fetch("http://localhost:8080/user/" + user.id, {
         method: "DELETE",
         credentials: "include",
-      });
+        cache: "no-store", 
+    });
 
       if (!response.ok) {
         throw new Error("Error deleting profile.");

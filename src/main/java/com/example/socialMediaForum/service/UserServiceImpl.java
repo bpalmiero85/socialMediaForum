@@ -1,7 +1,12 @@
 package com.example.socialMediaForum.service;
 
+import com.example.socialMediaForum.model.ForumThread;
+import com.example.socialMediaForum.model.Post;
 import com.example.socialMediaForum.model.User;
+import com.example.socialMediaForum.repositories.ForumThreadRepository;
+import com.example.socialMediaForum.repositories.PostRepository;
 import com.example.socialMediaForum.repositories.UserRepository;
+import java.util.List;
 
 import java.io.UnsupportedEncodingException;
 
@@ -21,6 +26,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private ForumThreadRepository threadRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -47,7 +58,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUserById(Long id) {
+        // List<ForumThread> userPosts = threadRepository.findUserById(id);
+        // List<Post> userComments = postRepository.findUserById(id);
         userRepository.deleteById(id);
+
     }
 
     public User updateUser(User user) {

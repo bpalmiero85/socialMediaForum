@@ -63,7 +63,7 @@ public class SecurityConfig {
             public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                         .cors().and()
-                        .csrf().disable()
+                        .csrf().disable() 
                         .authorizeRequests()
                         .antMatchers(HttpMethod.POST, "/user/**").permitAll()
                         .antMatchers(HttpMethod.GET, "/user/**").permitAll()
@@ -79,7 +79,7 @@ public class SecurityConfig {
                         .antMatchers("/h2-console/**").permitAll()
                         .antMatchers("/uploads/**").permitAll()
                         .antMatchers("/ws/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated() 
                         .and()
                         .formLogin()
                         .and()
