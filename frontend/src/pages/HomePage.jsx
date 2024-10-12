@@ -20,6 +20,8 @@ const HomePage = () => {
   const [isCropping, setIsCropping] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [commentSubscription, setCommentSubscription] = useState(null);
+  const [deletedCommentSubscription, setDeletedCommentSubscription] =
+    useState(null);
 
   useEffect(() => {
     fetchThreads();
@@ -65,10 +67,11 @@ const HomePage = () => {
 
   const connectWebSocket = () => {
     const socketUrl = "http://localhost:8080/ws";
-    const socket = new SockJS(socketUrl);
+
+    const createSocket = () => new SockJS(socketUrl);
 
     const stompClient = new Client({
-      webSocketFactory: () => socket,
+      webSocketFactory: createSocket,
       debug: (str) => console.log(str),
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
@@ -100,6 +103,17 @@ const HomePage = () => {
       },
       onWebSocketClose: (event) => {
         console.error("WebSocket closed: ", event);
+
+        if (!event.wasClean) {
+          console.log("Reconnecting WebSocket...");
+          if (!stompClient.connected) {
+            stompClient.activate();
+          }
+        }
+      },
+
+      onWebSocketError: (error) => {
+        console.error("WebSocket encountered an error: ", error);
       },
     });
 
@@ -133,13 +147,16 @@ const HomePage = () => {
       if (commentSubscription) {
         commentSubscription.unsubscribe();
       }
+      if (deletedCommentSubscription) {
+        deletedCommentSubscription.unsubscribe();
+      }
     }
 
     setSelectedThread(thread);
     fetchComments(thread.forumThreadId);
 
     if (stompClient && stompClient.connected) {
-      const subscription = stompClient.subscribe(
+      const newCommentSubscription = stompClient.subscribe(
         `/topic/comments/${thread.forumThreadId}`,
         (message) => {
           const updatedComment = JSON.parse(message.body);
@@ -147,36 +164,43 @@ const HomePage = () => {
             const commentExists = prevComments.some(
               (comment) => comment.postId === updatedComment.postId
             );
+
             if (commentExists) {
-              return prevComments.map((comment) =>
-                comment.postId === updatedComment.postId
-                  ? updatedComment
-                  : comment
-              );
+              return [
+                ...prevComments.map((comment) =>
+                  comment.postId === updatedComment.postId
+                    ? updatedComment
+                    : comment
+                ),
+              ];
             } else {
               return [updatedComment, ...prevComments];
             }
           });
         }
       );
-      setCommentSubscription(subscription);
+      setCommentSubscription(newCommentSubscription);
 
-      const deletedSubscription = stompClient.subscribe(
+      const newDeletedCommentSubscription = stompClient.subscribe(
         `/topic/comments/deleted/${thread.forumThreadId}`,
         (message) => {
           const deletedPostId = JSON.parse(message.body);
-          setComments((prevComments) =>
-            prevComments.filter((comment) => comment.postId !== deletedPostId)
-          );
+          setComments((prevComments) => [
+            ...prevComments.filter(
+              (comment) => comment.postId !== deletedPostId
+            ),
+          ]);
+          setSelectedThread((prevThread) => ({
+            ...prevThread,
+            comments: prevThread.comments - 1,
+          }));
         }
       );
-      setCommentSubscription(deletedSubscription);
+      setDeletedCommentSubscription(newDeletedCommentSubscription);
     }
   };
 
-  const handleCreateThread = async (e) => {
-    e.preventDefault();
-
+  const handleDeleteComment = async (postId) => {
     if (!user || !user.username) {
       console.error("User not available. Please log in.");
       return;
@@ -184,46 +208,30 @@ const HomePage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/threads?username=${encodeURIComponent(
+        `http://localhost:8080/posts/${postId}?username=${encodeURIComponent(
           user.username
-        )}&profilePicture=${encodeURIComponent(user.profilePicture || "")}`,
+        )}`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            title,
-            content,
-          }),
+          method: "DELETE",
           credentials: "include",
         }
       );
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Error: ${errorText}`);
+        throw new Error("Error deleting comment.");
       }
 
-      const newThread = await response.json();
-      setThreads((prevThreads) => {
-        if (
-          prevThreads.some(
-            (thread) => thread.forumThreadId === newThread.forumThreadId
-          )
-        ) {
-          return prevThreads;
-        }
-        return [newThread, ...prevThreads];
-      });
-      setTitle("");
-      setContent("");
-      setShowForm(false);
+      setComments((prevComments) => [
+        ...prevComments.filter((comment) => comment.postId !== postId),
+      ]);
+      setSelectedThread((prevThread) => ({
+        ...prevThread,
+        comments: prevThread.comments - 1,
+      }));
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error("Error deleting comment:", error);
     }
   };
-
   const handleCreateComment = async (e) => {
     e.preventDefault();
 
@@ -256,42 +264,9 @@ const HomePage = () => {
 
       const newComment = await response.json();
 
-      setComments([newComment, ...comments]);
-
       setCommentContent("");
     } catch (error) {
       console.error("Error creating comment:", error);
-    }
-  };
-
-  const handleDeleteComment = async (postId) => {
-    if (!user || !user.username) {
-      console.error("User not available. Please log in.");
-      return;
-    }
-
-    console.log("Deleting comment with postId:", postId);
-
-    try {
-      const response = await fetch(
-        `http://localhost:8080/posts/${postId}?username=${encodeURIComponent(
-          user.username
-        )}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Error deleting comment.");
-      }
-
-      setComments((prevComments) =>
-        prevComments.filter((comment) => comment.postId !== postId)
-      );
-    } catch (error) {
-      console.error("Error deleting comment:", error);
     }
   };
 
@@ -349,7 +324,57 @@ const HomePage = () => {
 
       console.log(`Comment with postId ${postId} successfully upvoted.`);
     } catch (error) {
-      console.error("Error liking comment:", error);
+      console.error("Error upvoting comment:", error);
+    }
+  };
+
+  const handleCreateThread = async (e) => {
+    e.preventDefault();
+
+    if (!user || !user.username) {
+      console.error("User not available. Please log in.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/threads?username=${encodeURIComponent(
+          user.username
+        )}&profilePicture=${encodeURIComponent(user.profilePicture || "")}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title,
+            content,
+          }),
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error: ${errorText}`);
+      }
+
+      const newThread = await response.json();
+      setThreads((prevThreads) => {
+        if (
+          prevThreads.some(
+            (thread) => thread.forumThreadId === newThread.forumThreadId
+          )
+        ) {
+          return prevThreads;
+        }
+        return [newThread, ...prevThreads];
+      });
+      setTitle("");
+      setContent("");
+      setShowForm(false);
+    } catch (error) {
+      console.error("Error creating post:", error);
     }
   };
 
@@ -364,10 +389,10 @@ const HomePage = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Error liking post.");
+        throw new Error("Error upvoting thread.");
       }
     } catch (error) {
-      console.error("Error liking post:", error);
+      console.error("Error upvoting thread:", error);
     }
   };
 
@@ -480,12 +505,14 @@ const HomePage = () => {
                     Delete
                   </button>
                 )}
-                <button
-                  className="like-button"
-                  onClick={() => handleUpvoteThread(thread.forumThreadId)}
-                >
-                  👍 Like
-                </button>
+                <div>
+                  <button
+                    className="like-button"
+                    onClick={() => handleUpvoteThread(thread.forumThreadId)}
+                  >
+                    👍 Like
+                  </button>
+                </div>
                 <span className="post-likes">{thread.threadUpvotes} Likes</span>
                 <p className="thread-comments">Comments: {thread.comments}</p>
 
@@ -496,12 +523,16 @@ const HomePage = () => {
                       {comments.map((comment) => (
                         <div key={comment.postId} className="comment-item">
                           <p>{comment.postContent}</p>
-                          <button
-                            className="like-button"
-                            onClick={() => handleUpvoteComment(comment.postId)}
-                          >
-                            👍 Like
-                          </button>
+                          <div>
+                            <button
+                              className="like-button"
+                              onClick={() =>
+                                handleUpvoteComment(comment.postId)
+                              }
+                            >
+                              👍 Like
+                            </button>
+                          </div>
                           <span className="post-likes">
                             {comment.postUpvotes} Likes
                           </span>
@@ -530,9 +561,10 @@ const HomePage = () => {
                           {user?.username === comment.user?.username && (
                             <button
                               className="delete-comment-button"
-                              onClick={() =>
-                                handleDeleteComment(comment.postId)
-                              }
+                              onClick={(e) => {
+                                e.stopPropagation(); 
+                                handleDeleteComment(comment.postId); 
+                              }}
                             >
                               Delete
                             </button>
