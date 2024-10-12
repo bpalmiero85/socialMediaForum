@@ -27,8 +27,8 @@ public class PostService {
   @Autowired
   private UserRepository userRepository;
 
-  public List<Post> getAllPostsByThreadId(Long forumThreadId) {
-    return postRepository.findByThread_ForumThreadId(forumThreadId);
+  public List<Post> getAllPostsByThreadId(Long userId) {
+    return postRepository.findByUserId(userId);
   }
 
   public Post createPost(@RequestBody Post post, @RequestParam String username, @RequestParam String profilePicture) {
