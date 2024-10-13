@@ -473,8 +473,17 @@ const HomePage = () => {
             {threads.map((thread) => (
               <div
                 key={thread.forumThreadId}
-                className="thread-item"
-                onClick={() => handleThreadClick(thread)}
+                className={`thread-item ${
+                  selectedThread?.forumThreadId === thread.forumThreadId
+                    ? "selected"
+                    : ""
+                }`} // Add a class to indicate it's selected
+                onClick={() => {
+                  if (selectedThread?.forumThreadId !== thread.forumThreadId) {
+                    // Only trigger if it's a different thread than the currently selected one
+                    handleThreadClick(thread); // Handle thread click only if it's not already selected
+                  }
+                }}
               >
                 <h4 className="thread-title">{thread.title}</h4>
                 <div className="thread-user-info">
@@ -497,10 +506,14 @@ const HomePage = () => {
                 </div>
                 <p className="thread-created-at">{thread.createdAt}</p>
                 <p className="thread-content">{thread.content}</p>
+
                 {user?.username === thread.user?.username && (
                   <button
                     className="delete-comment-button"
-                    onClick={() => handleDeleteThread(thread.forumThreadId)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteThread(thread.forumThreadId);
+                    }}
                   >
                     Delete
                   </button>
@@ -508,7 +521,10 @@ const HomePage = () => {
                 <div>
                   <button
                     className="like-button"
-                    onClick={() => handleUpvoteThread(thread.forumThreadId)}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent event bubbling
+                      handleUpvoteThread(thread.forumThreadId);
+                    }}
                   >
                     👍 Like
                   </button>
@@ -562,8 +578,8 @@ const HomePage = () => {
                             <button
                               className="delete-comment-button"
                               onClick={(e) => {
-                                e.stopPropagation(); 
-                                handleDeleteComment(comment.postId); 
+                                e.stopPropagation(); // Prevent click event from affecting parent elements
+                                handleDeleteComment(comment.postId);
                               }}
                             >
                               Delete
