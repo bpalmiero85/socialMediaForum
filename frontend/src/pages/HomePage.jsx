@@ -67,9 +67,9 @@ const HomePage = () => {
 
   const connectWebSocket = () => {
     const socketUrl = "http://localhost:8080/ws";
-
+  
     const createSocket = () => new SockJS(socketUrl);
-
+  
     const stompClient = new Client({
       webSocketFactory: createSocket,
       debug: (str) => console.log(str),
@@ -78,7 +78,8 @@ const HomePage = () => {
       heartbeatOutgoing: 4000,
       onConnect: (frame) => {
         console.log("Connected to WebSocket", frame);
-
+  
+        // Subscribe to the threads topic for thread updates
         stompClient.subscribe("/topic/threads", (message) => {
           const updatedThread = JSON.parse(message.body);
           setThreads((prevThreads) => {
@@ -96,6 +97,16 @@ const HomePage = () => {
             }
           });
         });
+  
+        // Subscribe to the deleted threads topic
+        stompClient.subscribe("/topic/threads/deleted", (message) => {
+          const deletedThreadId = JSON.parse(message.body);
+          setThreads((prevThreads) =>
+            prevThreads.filter(
+              (thread) => thread.forumThreadId !== deletedThreadId
+            )
+          );
+        });
       },
       onStompError: (frame) => {
         console.error("Broker reported error: ", frame.headers["message"]);
@@ -103,7 +114,7 @@ const HomePage = () => {
       },
       onWebSocketClose: (event) => {
         console.error("WebSocket closed: ", event);
-
+  
         if (!event.wasClean) {
           console.log("Reconnecting WebSocket...");
           if (!stompClient.connected) {
@@ -111,12 +122,11 @@ const HomePage = () => {
           }
         }
       },
-
       onWebSocketError: (error) => {
         console.error("WebSocket encountered an error: ", error);
       },
     });
-
+  
     stompClient.activate();
     setStompClient(stompClient);
   };
