@@ -88,6 +88,10 @@ public class PostService {
     return postRepository.findById(postId);
   }
 
+  public List<Post> getCommentsByThreadId(Long threadId) {
+    return postRepository.findByThread_ForumThreadId(threadId);
+}
+
   public Post save(Post post) {
     post.setPostCreatedAt(LocalDateTime.now());
     post.setPostLastUpdatedAt(LocalDateTime.now());

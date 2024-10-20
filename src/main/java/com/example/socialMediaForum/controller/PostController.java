@@ -3,6 +3,10 @@ package com.example.socialMediaForum.controller;
 import com.example.socialMediaForum.model.ForumThread;
 import com.example.socialMediaForum.model.Post;
 import com.example.socialMediaForum.service.PostService;
+import com.example.socialMediaForum.service.ThreadService;
+import com.example.socialMediaForum.service.UserService;
+
+import com.example.socialMediaForum.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +27,12 @@ public class PostController {
   @Autowired
   private SimpMessagingTemplate messagingTemplate;
 
+  @Autowired
+  private ThreadService threadService;
+
+  @Autowired
+  private UserService userService;
+
   @GetMapping("/thread/{forumThreadId}")
   public List<Post> getAllPostsByThreadId(@PathVariable Long forumThreadId) {
     return postService.getAllPostsByThreadId(forumThreadId);
@@ -35,25 +45,34 @@ public class PostController {
   }
 
   @PostMapping
-  public ResponseEntity<Post> createPost(@RequestBody Post post, @RequestParam String username,
-      @RequestParam(required = false) String profilePicture) {
-    try {
-      Post newPost = postService.createPost(post, username, profilePicture);
+public ResponseEntity<Post> createComment(@RequestParam Long threadId,
+    @RequestParam String username,
+    @RequestBody Post post) {
 
-      if (newPost.getThread() == null || newPost.getThread().getForumThreadId() == null) {
-        return ResponseEntity.badRequest().body(null);
-      }
-
-      messagingTemplate.convertAndSend("/topic/comments/" + newPost.getThread().getForumThreadId(), newPost);
-
-      ForumThread updatedThread = newPost.getThread();
-      messagingTemplate.convertAndSend("/topic/threads", updatedThread);
-
-      return ResponseEntity.ok(newPost);
-    } catch (IllegalArgumentException e) {
-      return ResponseEntity.badRequest().body(null);
-    }
+  ForumThread thread = threadService.getThreadById(threadId).orElse(null);
+  if (thread == null) {
+    return ResponseEntity.badRequest().build();
   }
+
+  User user = userService.findByUsername(username);
+  if (user == null) {
+    return ResponseEntity.badRequest().build();
+  }
+
+  post.setUser(user);
+  post.setThread(thread);
+
+  Post savedPost = postService.save(post);
+
+  
+  messagingTemplate.convertAndSend("/topic/comments/" + threadId, savedPost);
+
+  
+  int updatedCommentCount = postService.getAllPostsByThreadId(threadId).size();
+  messagingTemplate.convertAndSend("/topic/comments/count/" + threadId, updatedCommentCount);
+
+  return ResponseEntity.ok(savedPost);
+}
 
   @PostMapping("/{postId}/upvotes")
   public ResponseEntity<Post> upvotePost(@PathVariable Long postId) {
@@ -64,7 +83,7 @@ public class PostController {
       post.setPostUpvotes(post.getPostUpvotes() + 1);
       Post updatedPost = postService.save(post);
 
-      messagingTemplate.convertAndSend("/topic/comments/" + post.getThread().getForumThreadId(), updatedPost);
+      messagingTemplate.convertAndSend("/topic/comments/upvoted/" + post.getThread().getForumThreadId(), updatedPost);
 
       return ResponseEntity.ok(updatedPost);
     }
