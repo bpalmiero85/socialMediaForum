@@ -299,6 +299,12 @@ body {
   height: 25px;
 }
 
+.delete-comment-button {
+  margin-bottom: 7px;
+  background-color: lightblue;
+  cursor: pointer;
+}
+
 .delete-profile {
   padding: 7px;
   border-radius: 8px;
