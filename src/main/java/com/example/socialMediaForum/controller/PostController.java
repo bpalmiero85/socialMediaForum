@@ -64,6 +64,8 @@ public class PostController {
 
     Post savedPost = postService.save(post);
 
+    messagingTemplate.convertAndSend("/topic/comments/" + threadId, savedPost);
+
     return ResponseEntity.ok(savedPost);
   }
 
@@ -76,7 +78,7 @@ public class PostController {
       post.setPostUpvotes(post.getPostUpvotes() + 1);
       Post updatedPost = postService.save(post);
 
-      messagingTemplate.convertAndSend("/topic/comments/" + post.getThread().getForumThreadId(), updatedPost);
+      messagingTemplate.convertAndSend("/topic/comments/upvoted/" + post.getThread().getForumThreadId(), updatedPost);
 
       return ResponseEntity.ok(updatedPost);
     }

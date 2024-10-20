@@ -62,17 +62,19 @@ const HomePage = () => {
         const data = await response.json();
 
         setThreads((prevThreads) =>
-        prevThreads.map((thread) =>
-          thread.forumThreadId === thread.forumThreadId
-            ? {
-                ...thread,
-                comments: Array.isArray(thread.comments)
-                  ? thread.comments.filter((comment) => comment.postId !== deletedPostId)
-                  : [], 
-              }
-            : thread
-        )
-      );
+          prevThreads.map((thread) =>
+            thread.forumThreadId === thread.forumThreadId
+              ? {
+                  ...thread,
+                  comments: Array.isArray(thread.comments)
+                    ? thread.comments.filter(
+                        (comment) => comment.postId !== deletedPostId
+                      )
+                    : [],
+                }
+              : thread
+          )
+        );
         setComments(data);
       } else {
         throw new Error("Error fetching comments");
@@ -168,63 +170,72 @@ const HomePage = () => {
 
   const handleThreadClick = (thread) => {
     if (selectedThread?.forumThreadId !== thread.forumThreadId) {
+      
       if (commentSubscription) commentSubscription.unsubscribe();
       if (deletedCommentSubscription) deletedCommentSubscription.unsubscribe();
   
+     
       setSelectedThread(thread);
   
+     
       if (!Array.isArray(thread.comments) || thread.comments.length === 0) {
         fetchComments(thread.forumThreadId);
       }
   
       if (stompClient && stompClient.connected) {
+        
+     
         const newCommentSubscription = stompClient.subscribe(
           `/topic/comments/${thread.forumThreadId}`,
           (message) => {
-            const updatedComment = JSON.parse(message.body);
+            const newComment = JSON.parse(message.body);
+            console.log("New comment received:", newComment); 
   
-            setThreads((prevThreads) =>
-              prevThreads.map((threadItem) =>
-                threadItem.forumThreadId === thread.forumThreadId
-                  ? {
-                      ...threadItem,
-                      comments: Array.isArray(threadItem.comments)
-                        ? threadItem.comments.some(
-                            (comment) =>
-                              comment.postId === updatedComment.postId
-                          )
-                          ? threadItem.comments
-                          : [...threadItem.comments, updatedComment]
-                        : [updatedComment], // Ensure comments is an array
-                    }
-                  : threadItem
+            setComments((prevComments) => {
+          
+              const existingComment = prevComments.find(
+                (comment) => comment.postId === newComment.postId
+              );
+             
+              if (!existingComment) {
+                return [...prevComments, newComment];
+              }
+              return prevComments; 
+            });
+          }
+        );
+  
+      
+        const newUpvoteSubscription = stompClient.subscribe(
+          `/topic/comments/upvoted/${thread.forumThreadId}`,
+          (message) => {
+            const updatedComment = JSON.parse(message.body);
+            console.log("Upvoted comment received:", updatedComment); 
+  
+           
+            setComments((prevComments) =>
+              prevComments.map((comment) =>
+                comment.postId === updatedComment.postId ? updatedComment : comment
               )
             );
           }
         );
-        setCommentSubscription(newCommentSubscription);
   
+        
         const newDeletedCommentSubscription = stompClient.subscribe(
           `/topic/comments/deleted/${thread.forumThreadId}`,
           (message) => {
             const deletedPostId = JSON.parse(message.body);
+            console.log("Deleted comment ID:", deletedPostId); // Debug
   
-            setThreads((prevThreads) =>
-              prevThreads.map((threadItem) =>
-                threadItem.forumThreadId === thread.forumThreadId
-                  ? {
-                      ...threadItem,
-                      comments: Array.isArray(threadItem.comments)
-                        ? threadItem.comments.filter(
-                            (comment) => comment.postId !== deletedPostId
-                          )
-                        : [], // Ensure comments is an array
-                    }
-                  : threadItem
-              )
+            setComments((prevComments) =>
+              prevComments.filter((comment) => comment.postId !== deletedPostId)
             );
           }
         );
+  
+       
+        setCommentSubscription(newCommentSubscription);
         setDeletedCommentSubscription(newDeletedCommentSubscription);
       }
     }
@@ -232,17 +243,17 @@ const HomePage = () => {
 
   const handleCreateComment = async (e) => {
     e.preventDefault();
-  
+
     if (!user || !user.username) {
       console.error("User not available. Please log in.");
       return;
     }
-  
+
     if (!commentContent || commentContent.trim() === "") {
       console.error("Comment content is empty.");
       return;
     }
-  
+
     try {
       const response = await fetch(
         `http://localhost:8080/posts?threadId=${encodeURIComponent(
@@ -254,25 +265,22 @@ const HomePage = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            postContent: commentContent, // This is the content of the comment
+            postContent: commentContent,
           }),
           credentials: "include",
         }
       );
-  
+
       if (!response.ok) {
         throw new Error("Error creating comment.");
       }
-  
+
       const newComment = await response.json();
-  
-      // Clear the input field after the comment is created
+
       setCommentContent("");
-  
-      // Add the new comment to the comments state
+
       setComments((prevComments) => [...prevComments, newComment]);
-  
-      // Update the selected thread with the new comment
+
       setThreads((prevThreads) =>
         prevThreads.map((thread) =>
           thread.forumThreadId === selectedThread.forumThreadId
@@ -280,7 +288,7 @@ const HomePage = () => {
                 ...thread,
                 comments: Array.isArray(thread.comments)
                   ? [...thread.comments, newComment]
-                  : [newComment], // Ensure comments is an array
+                  : [newComment],
               }
             : thread
         )
@@ -288,8 +296,11 @@ const HomePage = () => {
     } catch (error) {
       console.error("Error creating comment:", error);
     }
+    
   };
+
   
+
   const handleDeleteThread = async (forumThreadId) => {
     if (!forumThreadId) {
       console.error("No forumThreadId found for deleting thread.");
@@ -340,11 +351,6 @@ const HomePage = () => {
   };
 
   const handleUpvoteComment = async (postId) => {
-    if (!postId) {
-      console.error("No postId found for upvoting comment.");
-      return;
-    }
-
     try {
       const response = await fetch(
         `http://localhost:8080/posts/${postId}/upvotes`,
@@ -357,6 +363,14 @@ const HomePage = () => {
       if (!response.ok) {
         throw new Error("Error upvoting comment.");
       }
+
+      const updatedComment = await response.json();
+
+      setComments((prevComments) =>
+        prevComments.map((comment) =>
+          comment.postId === updatedComment.postId ? updatedComment : comment
+        )
+      );
 
       console.log(`Comment with postId ${postId} successfully upvoted.`);
     } catch (error) {
@@ -437,7 +451,7 @@ const HomePage = () => {
       console.error("User not available. Please log in.");
       return;
     }
-  
+
     try {
       const response = await fetch(
         `http://localhost:8080/posts/${postId}?username=${encodeURIComponent(
@@ -448,25 +462,22 @@ const HomePage = () => {
           credentials: "include",
         }
       );
-  
+
       if (!response.ok) {
         throw new Error("Error deleting comment.");
       }
-  
-     
+
       setComments((prevComments) =>
         prevComments.filter((comment) => comment.postId !== postId)
       );
-  
-      
+
       setSelectedThread((prevThread) => ({
         ...prevThread,
         comments: Array.isArray(prevThread.comments)
           ? prevThread.comments.filter((comment) => comment.postId !== postId)
-          : [], 
+          : [],
       }));
-  
-      
+
       setThreads((prevThreads) =>
         prevThreads.map((threadItem) =>
           threadItem.forumThreadId === selectedThread.forumThreadId
@@ -476,7 +487,7 @@ const HomePage = () => {
                   ? threadItem.comments.filter(
                       (comment) => comment.postId !== postId
                     )
-                  : [], 
+                  : [],
               }
             : threadItem
         )
@@ -620,7 +631,8 @@ const HomePage = () => {
                 </div>
                 <span className="post-likes">{thread.threadUpvotes} Likes</span>
                 <p className="thread-comments">
-                  Comments: {thread.comments.length}
+                  Comments:{" "}
+                  {Array.isArray(thread.comments) ? thread.comments.length : 0}
                 </p>
 
                 {selectedThread?.forumThreadId === thread.forumThreadId && (
@@ -630,7 +642,7 @@ const HomePage = () => {
                       {comments.map((comment) => (
                         <div key={comment.postId} className="comment-item">
                           <p>{comment.postContent}</p>
-                          <div>
+                          <div className="like-container">
                             <button
                               className="like-button"
                               onClick={() =>
@@ -639,10 +651,10 @@ const HomePage = () => {
                             >
                               👍 Like
                             </button>
+                            <span className="post-likes">
+                              {comment.postUpvotes} Likes
+                            </span>
                           </div>
-                          <span className="post-likes">
-                            {comment.postUpvotes} Likes
-                          </span>
                           <div className="thread-user-info">
                             {comment.user?.profilePicture ? (
                               <img
