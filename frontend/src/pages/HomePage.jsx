@@ -49,7 +49,9 @@ const HomePage = () => {
       const threadsWithComments = data.map((thread) => ({
         ...thread,
         comments: Array.isArray(thread.comments) ? thread.comments : [],
-        commentCount: Array.isArray(thread.comments) ? thread.comments.length : 0,
+        commentCount: Array.isArray(thread.comments)
+          ? thread.comments.length
+          : 0,
       }));
 
       setThreads(threadsWithComments);
@@ -72,14 +74,11 @@ const HomePage = () => {
 
         setThreads((prevThreads) =>
           prevThreads.map((thread) =>
-            thread.forumThreadId === thread.forumThreadId
+            thread.forumThreadId === threadId
               ? {
                   ...thread,
-                  comments: Array.isArray(thread.comments)
-                    ? thread.comments.filter(
-                        (comment) => comment.postId !== deletedPostId
-                      )
-                    : [],
+                  comments: data,
+                  commentCount: data.length,
                 }
               : thread
           )
@@ -273,20 +272,20 @@ const HomePage = () => {
       setCommentContent("");
 
       setThreads((prevThreads) =>
-      prevThreads.map((thread) =>
-        thread.forumThreadId === selectedThread.forumThreadId
-          ? {
-              ...thread,
-              comments: [...(thread.comments || []), newComment],
-              commentCount: thread.commentCount +1,
-            }
-          : thread
-      )
-    );
+        prevThreads.map((thread) =>
+          thread.forumThreadId === selectedThread.forumThreadId
+            ? {
+                ...thread,
+                comments: [...(thread.comments || []), newComment],
+                commentCount: thread.commentCount + 1,
+              }
+            : thread
+        )
+      );
 
       if (selectedThread?.forumThreadId === newComment.thread.forumThreadId) {
         setComments((prevComments) => [...prevComments, newComment]);
-    }
+      }
     } catch (error) {
       console.error("Error creating comment:", error);
     }
@@ -462,6 +461,8 @@ const HomePage = () => {
         prevComments.filter((comment) => comment.postId !== postId)
       );
 
+      
+
       setSelectedThread((prevThread) => ({
         ...prevThread,
         comments: Array.isArray(prevThread.comments)
@@ -470,19 +471,18 @@ const HomePage = () => {
       }));
 
       setThreads((prevThreads) =>
-        prevThreads.map((threadItem) =>
-          threadItem.forumThreadId === selectedThread.forumThreadId
-            ? {
-                ...threadItem,
-                comments: Array.isArray(threadItem.comments)
-                  ? threadItem.comments.filter(
-                      (comment) => comment.postId !== postId
-                    )
-                  : [],
-              }
-            : threadItem
-        )
-      );
+      prevThreads.map((thread) =>
+        thread.forumThreadId === selectedThread.forumThreadId
+          ? {
+              ...thread,
+              comments: thread.comments.filter(
+                (comment) => comment.postId !== postId
+              ),
+              commentCount: thread.commentCount - 1, 
+            }
+          : thread
+      )
+    );
     } catch (error) {
       console.error("Error deleting comment:", error);
     }
@@ -622,7 +622,7 @@ const HomePage = () => {
                 </div>
                 <span className="post-likes">{thread.threadUpvotes} Likes</span>
                 <p className="thread-comments">
-                  Comments: {Array.isArray(thread.comments) ? thread.comments.length : 0}
+                  Comments: {thread.commentCount}
                 </p>
 
                 {selectedThread?.forumThreadId === thread.forumThreadId && (
