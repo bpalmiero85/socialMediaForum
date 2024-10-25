@@ -45,7 +45,14 @@ const HomePage = () => {
       });
 
       const data = await response.json();
-      setThreads(data);
+
+      const threadsWithComments = data.map((thread) => ({
+        ...thread,
+        comments: Array.isArray(thread.comments) ? thread.comments : [],
+        commentCount: Array.isArray(thread.comments) ? thread.comments.length : 0,
+      }));
+
+      setThreads(threadsWithComments);
     } catch (error) {
       console.error("Error fetching threads:", error);
     }
@@ -266,21 +273,20 @@ const HomePage = () => {
       setCommentContent("");
 
       setThreads((prevThreads) =>
-        prevThreads.map((thread) =>
-          thread.forumThreadId === selectedThread.forumThreadId
-            ? {
-                ...thread,
-                comments: Array.isArray(thread.comments)
-                  ? [...thread.comments, newComment]
-                  : [newComment],
-              }
-            : thread
-        )
-      );
+      prevThreads.map((thread) =>
+        thread.forumThreadId === selectedThread.forumThreadId
+          ? {
+              ...thread,
+              comments: [...(thread.comments || []), newComment],
+              commentCount: thread.commentCount +1,
+            }
+          : thread
+      )
+    );
 
       if (selectedThread?.forumThreadId === newComment.thread.forumThreadId) {
         setComments((prevComments) => [...prevComments, newComment]);
-      }
+    }
     } catch (error) {
       console.error("Error creating comment:", error);
     }
@@ -616,8 +622,7 @@ const HomePage = () => {
                 </div>
                 <span className="post-likes">{thread.threadUpvotes} Likes</span>
                 <p className="thread-comments">
-                  Comments:{" "}
-                  {Array.isArray(thread.comments) ? thread.comments.length : 0}
+                  Comments: {Array.isArray(thread.comments) ? thread.comments.length : 0}
                 </p>
 
                 {selectedThread?.forumThreadId === thread.forumThreadId && (
