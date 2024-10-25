@@ -24,7 +24,8 @@ const HomePage = () => {
   const [dialogPosition, setDialogPosition] = useState({ top: 0, left: 0 });
   const [selectedThreadId, setSelectedThreadId] = useState(null);
   const [commentSubscription, setCommentSubscription] = useState(null);
-  const [upvoteCommentSubscription, setUpvoteCommentSubscription] = useState(null);
+  const [upvoteCommentSubscription, setUpvoteCommentSubscription] =
+    useState(null);
   const [deletedCommentSubscription, setDeletedCommentSubscription] =
     useState(null);
 
@@ -171,6 +172,10 @@ const HomePage = () => {
 
   const handleThreadClick = (thread) => {
     if (selectedThread?.forumThreadId !== thread.forumThreadId) {
+      if (commentSubscription) commentSubscription.unsubscribe();
+      if (upvoteCommentSubscription) commentSubscription.unsubscribe();
+      if (deletedCommentSubscription) deletedCommentSubscription.unsubscribe();
+
       setSelectedThread(thread);
 
       if (!Array.isArray(thread.comments) || thread.comments.length === 0) {
@@ -182,13 +187,11 @@ const HomePage = () => {
           `/topic/comments/${thread.forumThreadId}`,
           (message) => {
             const newComment = JSON.parse(message.body);
-            console.log("New comment received:", newComment);
 
             setComments((prevComments) => {
               const existingComment = prevComments.find(
                 (comment) => comment.postId === newComment.postId
               );
-
               if (!existingComment) {
                 return [...prevComments, newComment];
               }
@@ -201,8 +204,6 @@ const HomePage = () => {
           `/topic/comments/upvoted/${thread.forumThreadId}`,
           (message) => {
             const updatedComment = JSON.parse(message.body);
-            console.log("Upvoted comment received:", updatedComment);
-
             setComments((prevComments) =>
               prevComments.map((comment) =>
                 comment.postId === updatedComment.postId
@@ -213,14 +214,10 @@ const HomePage = () => {
           }
         );
 
-        setUpvoteCommentSubscription(newUpvoteSubscription);
-
         const newDeletedCommentSubscription = stompClient.subscribe(
           `/topic/comments/deleted/${thread.forumThreadId}`,
           (message) => {
             const deletedPostId = JSON.parse(message.body);
-            console.log("Deleted comment ID:", deletedPostId); // Debug
-
             setComments((prevComments) =>
               prevComments.filter((comment) => comment.postId !== deletedPostId)
             );
@@ -228,6 +225,7 @@ const HomePage = () => {
         );
 
         setCommentSubscription(newCommentSubscription);
+        setUpvoteCommentSubscription(newUpvoteSubscription);
         setDeletedCommentSubscription(newDeletedCommentSubscription);
       }
     }
@@ -236,15 +234,13 @@ const HomePage = () => {
   const handleCreateComment = async (e) => {
     e.preventDefault();
 
-    if (!user || !user.username) {
-      console.error("User not available. Please log in.");
+    if (
+      !user ||
+      !user.username ||
+      !commentContent ||
+      commentContent.trim() === ""
+    )
       return;
-    }
-
-    if (!commentContent || commentContent.trim() === "") {
-      console.error("Comment content is empty.");
-      return;
-    }
 
     try {
       const response = await fetch(
@@ -263,15 +259,11 @@ const HomePage = () => {
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Error creating comment.");
-      }
+      if (!response.ok) throw new Error("Error creating comment.");
 
       const newComment = await response.json();
 
       setCommentContent("");
-
-      setComments((prevComments) => [...prevComments, newComment]);
 
       setThreads((prevThreads) =>
         prevThreads.map((thread) =>
@@ -285,6 +277,10 @@ const HomePage = () => {
             : thread
         )
       );
+
+      if (selectedThread?.forumThreadId === newComment.thread.forumThreadId) {
+        setComments((prevComments) => [...prevComments, newComment]);
+      }
     } catch (error) {
       console.error("Error creating comment:", error);
     }
