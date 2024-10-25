@@ -71,7 +71,8 @@ public class ForumThreadController {
     if (optionalThread.isPresent()) {
       ForumThread thread = optionalThread.get();
       thread.setThreadUpvotes(thread.getThreadUpvotes() + 1);
-      ForumThread updatedThread = threadService.save(thread);
+
+      ForumThread updatedThread = threadService.saveWithoutUpdatingTimeStamp(thread);
 
       messagingTemplate.convertAndSend("/topic/threads", updatedThread);
 

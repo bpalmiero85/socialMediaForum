@@ -73,4 +73,8 @@ public class ThreadService {
     return forumThreadRepository.save(forumThread);
   }
 
+  public ForumThread saveWithoutUpdatingTimeStamp(ForumThread forumThread) {
+    return forumThreadRepository.save(forumThread);
+  }
+
 }

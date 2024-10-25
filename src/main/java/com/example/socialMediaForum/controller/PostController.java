@@ -45,34 +45,32 @@ public class PostController {
   }
 
   @PostMapping
-public ResponseEntity<Post> createComment(@RequestParam Long threadId,
-    @RequestParam String username,
-    @RequestBody Post post) {
+  public ResponseEntity<Post> createComment(@RequestParam Long threadId,
+      @RequestParam String username,
+      @RequestBody Post post) {
 
-  ForumThread thread = threadService.getThreadById(threadId).orElse(null);
-  if (thread == null) {
-    return ResponseEntity.badRequest().build();
+    ForumThread thread = threadService.getThreadById(threadId).orElse(null);
+    if (thread == null) {
+      return ResponseEntity.badRequest().build();
+    }
+
+    User user = userService.findByUsername(username);
+    if (user == null) {
+      return ResponseEntity.badRequest().build();
+    }
+
+    post.setUser(user);
+    post.setThread(thread);
+
+    Post savedPost = postService.save(post);
+
+    messagingTemplate.convertAndSend("/topic/comments/" + threadId, savedPost);
+
+    int updatedCommentCount = postService.getAllPostsByThreadId(threadId).size();
+    messagingTemplate.convertAndSend("/topic/comments/count/" + threadId, updatedCommentCount);
+
+    return ResponseEntity.ok(savedPost);
   }
-
-  User user = userService.findByUsername(username);
-  if (user == null) {
-    return ResponseEntity.badRequest().build();
-  }
-
-  post.setUser(user);
-  post.setThread(thread);
-
-  Post savedPost = postService.save(post);
-
-  
-  messagingTemplate.convertAndSend("/topic/comments/" + threadId, savedPost);
-
-  
-  int updatedCommentCount = postService.getAllPostsByThreadId(threadId).size();
-  messagingTemplate.convertAndSend("/topic/comments/count/" + threadId, updatedCommentCount);
-
-  return ResponseEntity.ok(savedPost);
-}
 
   @PostMapping("/{postId}/upvotes")
   public ResponseEntity<Post> upvotePost(@PathVariable Long postId) {
@@ -81,7 +79,8 @@ public ResponseEntity<Post> createComment(@RequestParam Long threadId,
     if (optionalPost.isPresent()) {
       Post post = optionalPost.get();
       post.setPostUpvotes(post.getPostUpvotes() + 1);
-      Post updatedPost = postService.save(post);
+
+      Post updatedPost = postService.saveWithoutUpdatingTimeStamp(post);
 
       messagingTemplate.convertAndSend("/topic/comments/upvoted/" + post.getThread().getForumThreadId(), updatedPost);
 

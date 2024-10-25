@@ -97,4 +97,8 @@ public class PostService {
     post.setPostLastUpdatedAt(LocalDateTime.now());
     return postRepository.save(post);
   }
+
+  public Post saveWithoutUpdatingTimeStamp(Post post) {
+    return postRepository.save(post);
+  }
 }
