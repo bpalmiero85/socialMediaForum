@@ -110,61 +110,18 @@ const HomePage = () => {
         stompClient.subscribe("/topic/comments", (message) => {
           const { forumThreadId, newComment } = JSON.parse(message.body);
 
-          setCommentsByThread((prev) => ({
-            ...prev,
-            [forumThreadId]: [...(prev[forumThreadId] || []), newComment],
+          setCommentsByThread((prevComments) => ({
+            ...prevComments,
+            [forumThreadId]: [
+              ...(prevComments[forumThreadId] || []),
+              newComment,
+            ],
           }));
 
           setThreads((prevThreads) =>
             prevThreads.map((thread) =>
               thread.forumThreadId === forumThreadId
                 ? { ...thread, commentCount: (thread.commentCount || 0) + 1 }
-                : thread
-            )
-          );
-        });
-
-        stompClient.subscribe("/topic/comments/all", (message) => {
-          const { forumThreadId, newComment } = JSON.parse(message.body);
-
-          setCommentsByThread((prev) => ({
-            ...prev,
-            [forumThreadId]: [...(prev[forumThreadId] || []), newComment],
-          }));
-
-          setThreads((prevThreads) =>
-            prevThreads.map((thread) =>
-              thread.forumThreadId === forumThreadId
-                ? { ...thread, commentCount: (thread.commentCount || 0) + 1 }
-                : thread
-            )
-          );
-        });
-
-        stompClient.subscribe("/topic/threads", (message) => {
-          const updatedThread = JSON.parse(message.body);
-          setThreads((prevThreads) => {
-            const threadExists = prevThreads.some(
-              (thread) => thread.forumThreadId === updatedThread.forumThreadId
-            );
-            if (threadExists) {
-              return prevThreads.map((thread) =>
-                thread.forumThreadId === updatedThread.forumThreadId
-                  ? updatedThread
-                  : thread
-              );
-            } else {
-              return [updatedThread, ...prevThreads];
-            }
-          });
-        });
-
-        stompClient.subscribe("/topic/threads/commentCount", (message) => {
-          const { threadId, commentCount } = JSON.parse(message.body);
-          setThreads((prevThreads) =>
-            prevThreads.map((thread) =>
-              thread.forumThreadId === threadId
-                ? { ...thread, commentCount }
                 : thread
             )
           );
@@ -177,6 +134,22 @@ const HomePage = () => {
               (thread) => thread.forumThreadId !== deletedThreadId
             )
           );
+        });
+
+        stompClient.subscribe("/topic/threads", (message) => {
+          const updatedThread = JSON.parse(message.body);
+          setThreads((prevThreads) => {
+            const threadExists = prevThreads.some(
+              (thread) => thread.forumThreadId === updatedThread.forumThreadId
+            );
+            return threadExists
+              ? prevThreads.map((thread) =>
+                  thread.forumThreadId === updatedThread.forumThreadId
+                    ? updatedThread
+                    : thread
+                )
+              : [updatedThread, ...prevThreads];
+          });
         });
       },
       onStompError: (frame) => {
@@ -388,10 +361,6 @@ const HomePage = () => {
 
       console.log(
         `Thread with forumThreadId ${forumThreadId} successfully deleted.`
-      );
-
-      setThreads((prevThreads) =>
-        prevThreads.filter((thread) => thread.forumThreadId !== forumThreadId)
       );
     } catch (error) {
       console.error("Error deleting thread:", error);
