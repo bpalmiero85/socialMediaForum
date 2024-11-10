@@ -95,7 +95,6 @@ const HomePage = () => {
 
   const connectWebSocket = () => {
     const socketUrl = "http://localhost:8080/ws";
-
     const createSocket = () => new SockJS(socketUrl);
 
     const stompClient = new Client({
@@ -107,7 +106,7 @@ const HomePage = () => {
       onConnect: (frame) => {
         console.log("Connected to WebSocket", frame);
 
-        stompClient.subscribe("/topic/comments", (message) => {
+        stompClient.subscribe("/topic/comments/created", (message) => {
           const { forumThreadId, newComment } = JSON.parse(message.body);
 
           setCommentsByThread((prevComments) => ({
@@ -122,6 +121,25 @@ const HomePage = () => {
             prevThreads.map((thread) =>
               thread.forumThreadId === forumThreadId
                 ? { ...thread, commentCount: (thread.commentCount || 0) + 1 }
+                : thread
+            )
+          );
+        });
+
+        stompClient.subscribe("/topic/comments/deleted", (message) => {
+          const { forumThreadId, postId } = JSON.parse(message.body);
+
+          setCommentsByThread((prevComments) => ({
+            ...prevComments,
+            [forumThreadId]: (prevComments[forumThreadId] || []).filter(
+              (comment) => comment.postId !== postId
+            ),
+          }));
+
+          setThreads((prevThreads) =>
+            prevThreads.map((thread) =>
+              thread.forumThreadId === forumThreadId
+                ? { ...thread, commentCount: (thread.commentCount || 0) - 1 }
                 : thread
             )
           );
@@ -229,6 +247,26 @@ const HomePage = () => {
           }
         );
 
+        stompClient.subscribe("/topic/comments/created", (message) => {
+          const { forumThreadId, newComment } = JSON.parse(message.body);
+
+          setCommentsByThread((prevComments) => ({
+            ...prevComments,
+            [forumThreadId]: [
+              ...(prevComments[forumThreadId] || []),
+              newComment,
+            ],
+          }));
+
+          setThreads((prevThreads) =>
+            prevThreads.map((thread) =>
+              thread.forumThreadId === forumThreadId
+                ? { ...thread, commentCount: (thread.commentCount || 0) + 1 }
+                : thread
+            )
+          );
+        });
+
         const newCommentCountSubscription = stompClient.subscribe(
           `/topic/threads/commentCount`,
           (message) => {
@@ -245,23 +283,23 @@ const HomePage = () => {
           `/topic/comments/deleted/${thread.forumThreadId}`,
           (message) => {
             const deletedPostId = JSON.parse(message.body);
-
+        
             setCommentsByThread((prev) => ({
               ...prev,
               [thread.forumThreadId]: (prev[thread.forumThreadId] || []).filter(
                 (comment) => comment.postId !== deletedPostId
               ),
             }));
-
+        
             setThreads((prevThreads) =>
               prevThreads.map((t) =>
                 t.forumThreadId === thread.forumThreadId
                   ? {
                       ...t,
-                      comments: (t.comments || []).filter(
-                        (comment) => comment.postId !== deletedPostId
-                      ),
-                      commentCount: t.commentCount - 1,
+                      comments: Array.isArray(t.comments)
+                        ? t.comments.filter((comment) => comment.postId !== deletedPostId)
+                        : [],
+                      commentCount: Math.max((t.commentCount || 1) - 1, 0), // Ensuring commentCount is always a number >= 0
                     }
                   : t
               )
@@ -295,14 +333,14 @@ const HomePage = () => {
 
   const handleCreateComment = async (e, forumThreadId) => {
     e.preventDefault();
-
+  
     if (!user || !user.username || !commentContent.trim() || !forumThreadId) {
       console.error("Missing user, content, or forumThreadId");
       return;
     }
-
+  
     console.log("Posting comment to thread:", forumThreadId);
-
+  
     try {
       const response = await fetch(
         `http://localhost:8080/posts?threadId=${encodeURIComponent(
@@ -315,24 +353,11 @@ const HomePage = () => {
           credentials: "include",
         }
       );
-
+  
       if (!response.ok) throw new Error("Error creating comment.");
-      const newComment = await response.json();
-
+      
+    
       setCommentContent("");
-
-      setCommentsByThread((prevComments) => ({
-        ...prevComments,
-        [forumThreadId]: [...(prevComments[forumThreadId] || []), newComment],
-      }));
-
-      setThreads((prevThreads) =>
-        prevThreads.map((thread) =>
-          thread.forumThreadId === forumThreadId
-            ? { ...thread, commentCount: (thread.commentCount || 0) + 1 }
-            : thread
-        )
-      );
     } catch (error) {
       console.error("Error creating comment:", error);
     }
@@ -516,9 +541,11 @@ const HomePage = () => {
           thread.forumThreadId === selectedThread.forumThreadId
             ? {
                 ...thread,
-                comments: thread.comments.filter(
-                  (comment) => comment.postId !== postId
-                ),
+                comments: Array.isArray(thread.comments)
+                  ? thread.comments.filter(
+                      (comment) => comment.postId !== postId
+                    )
+                  : [],
                 commentCount: thread.commentCount - 1,
               }
             : thread
