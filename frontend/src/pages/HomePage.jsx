@@ -24,6 +24,9 @@ const HomePage = () => {
   const [dialogPosition, setDialogPosition] = useState({ top: 0, left: 0 });
   const [selectedThreadId, setSelectedThreadId] = useState(null);
   const [commentSubscription, setCommentSubscription] = useState(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState(
+    user?.profilePicture || Placeholder
+  );
   const [upvoteCommentSubscription, setUpvoteCommentSubscription] =
     useState(null);
   const [deletedCommentSubscription, setDeletedCommentSubscription] =
@@ -61,6 +64,12 @@ const HomePage = () => {
       console.error("Error fetching threads:", error);
     }
   };
+
+  useEffect(() => {
+    if (user?.profilePicture) {
+      setProfilePictureUrl(`${user.profilePicture}?t=${Date.now()}`);
+    }
+  }, [user?.profilePicture]);
 
   const fetchComments = async (threadId) => {
     try {
@@ -312,15 +321,15 @@ const HomePage = () => {
   };
 
   const handleCreateComment = async (e, forumThreadId) => {
-    e.preventDefault(); 
-  
+    e.preventDefault();
+
     if (!user || !user.username || !commentContent.trim() || !forumThreadId) {
       console.error("Missing user, content, or forumThreadId");
       return;
     }
-  
+
     console.log("Posting comment to thread:", forumThreadId);
-  
+
     try {
       const response = await fetch(
         `http://localhost:8080/posts?threadId=${encodeURIComponent(
@@ -333,20 +342,17 @@ const HomePage = () => {
           credentials: "include",
         }
       );
-  
+
       if (!response.ok) throw new Error("Error creating comment.");
       const newComment = await response.json();
-  
+
       setCommentContent("");
-  
+
       setCommentsByThread((prevComments) => ({
         ...prevComments,
-        [forumThreadId]: [
-          ...(prevComments[forumThreadId] || []),
-          newComment,
-        ],
+        [forumThreadId]: [...(prevComments[forumThreadId] || []), newComment],
       }));
-  
+
       setThreads((prevThreads) =>
         prevThreads.map((thread) =>
           thread.forumThreadId === forumThreadId
@@ -639,7 +645,22 @@ const HomePage = () => {
                 onClick={() => handleThreadClick(thread)}
               >
                 <h4 className="thread-title">{thread.title}</h4>
-                <div className="thread-user-info"></div>
+                <div className="thread-user-info">
+                  {thread.user?.profilePicture ? (
+                    <img
+                      src={`http://localhost:8080/uploads/${thread.user.profilePicture}`}
+                      alt={`${thread.user.username}'s profile`}
+                      className="profile-picture-small"
+                    />
+                  ) : (
+                    <img
+                      src={Placeholder}
+                      alt="default"
+                      className="profile-picture-small"
+                    />
+                  )}
+                  <p className="comment-username">{thread.user?.username}</p>
+                </div>
                 <p className="thread-created-at">{thread.createdAt}</p>
                 <p className="thread-content">{thread.content}</p>
 
@@ -679,6 +700,22 @@ const HomePage = () => {
                       {(commentsByThread[thread.forumThreadId] || []).map(
                         (comment) => (
                           <div key={comment.postId} className="comment-item">
+                            <div className="comment-user-info">
+                              {comment.user?.profilePicture ? (
+                                <img
+                                  src={`http://localhost:8080/uploads/${comment.user.profilePicture}`}
+                                  alt={`${comment.user.username}'s profile`}
+                                  className="profile-picture-small"
+                                />
+                              ) : (
+                                <img
+                                  src={Placeholder}
+                                  alt="default"
+                                  className="profile-picture-small"
+                                />
+                              )}
+                              <span>{comment.user.username}</span>
+                            </div>
                             <p>{comment.postContent}</p>
                             <div className="like-container">
                               <button
@@ -693,7 +730,6 @@ const HomePage = () => {
                                 {comment.postUpvotes} Likes
                               </span>
                             </div>
-                            <div className="thread-user-info"></div>
                             <p className="comment-created-at">
                               {comment.postCreatedAt}
                             </p>
@@ -713,7 +749,9 @@ const HomePage = () => {
                       )}
                     </div>
                     <form
-                      onSubmit={(e) => handleCreateComment(e, selectedThread.forumThreadId)}
+                      onSubmit={(e) =>
+                        handleCreateComment(e, selectedThread.forumThreadId)
+                      }
                       className="comment-form"
                     >
                       <textarea
