@@ -23,6 +23,8 @@ const HomePage = () => {
   const [dialogPosition, setDialogPosition] = useState({ top: 0, left: 0 });
   const [selectedThreadId, setSelectedThreadId] = useState(null);
   const [commentSubscription, setCommentSubscription] = useState(null);
+  const [deletedCommentSubscription, setDeletedCommentSubscription] = useState(null);
+  const [upvoteCommentSubscription, setUpvoteCommentSubscription] = useState(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState(
     user?.profilePicture || Placeholder
   );
@@ -247,6 +249,8 @@ const HomePage = () => {
 
       if (stompClient && stompClient.connected) {
         if (commentSubscription) commentSubscription.unsubscribe();
+        if (deletedCommentSubscription) deletedCommentSubscription.unsubscribe();
+        if (upvoteCommentSubscription) upvoteCommentSubscription.unsubscribe();
 
         const newCommentSubscription = stompClient.subscribe(
           `/topic/comments/${thread.forumThreadId}`,
@@ -260,19 +264,66 @@ const HomePage = () => {
               ],
             }));
             setThreads((prevThreads) =>
-              prevThreads.map((t) =>
-                t.forumThreadId === thread.forumThreadId
-                  ? { ...t, commentCount: (t.commentCount || 0) + 1 }
-                  : t
+              prevThreads.map((thread) =>
+                thread.forumThreadId === thread.forumThreadId
+                  ? { ...thread, commentCount: (thread.commentCount || 0) + 1 }
+                  : thread
               )
             );
           }
         );
 
-        setCommentSubscription(newCommentSubscription);
-      }
-    }
-  };
+        const newDeletedCommentSubscription = stompClient.subscribe(
+          `/topic/comments/deleted/${thread.forumThreadId}`,
+          (message) => {
+              const { postId } = JSON.parse(message.body);
+              setCommentsByThread((prevComments) => {
+                  const updatedComments = (
+                      prevComments[thread.forumThreadId] || []
+                  ).filter((comment) => comment.postId !== postId);
+                  return {
+                      ...prevComments,
+                      [thread.forumThreadId]: updatedComments,
+                  };
+              });
+              setThreads((prevThreads) =>
+                  prevThreads.map((thread) =>
+                      thread.forumThreadId === thread.forumThreadId
+                          ? {
+                                ...thread,
+                                commentCount: Math.max((thread.commentCount || 1) - 1, 0),
+                            }
+                          : thread
+                  )
+              );
+          }
+      );
+      const newUpvoteCommentSubscription = stompClient.subscribe(
+        `/topic/comments/upvoted/${thread.forumThreadId}`,
+        (message) => {
+            const updatedComment = JSON.parse(message.body);
+            setCommentsByThread((prevComments) => {
+                const updatedComments = (
+                    prevComments[thread.forumThreadId] || []
+                ).map((comment) =>
+                    comment.postId === updatedComment.postId
+                        ? updatedComment
+                        : comment
+                );
+                return {
+                    ...prevComments,
+                    [thread.forumThreadId]: updatedComments,
+                };
+            });
+        }
+    );
+
+    setCommentSubscription(newCommentSubscription);
+    setDeletedCommentSubscription(newDeletedCommentSubscription);
+    setUpvoteCommentSubscription(newUpvoteCommentSubscription);
+}
+}
+};
 
   const handleCreateComment = async (e, forumThreadId) => {
     e.preventDefault();
@@ -296,7 +347,7 @@ const HomePage = () => {
       );
 
       if (!response.ok) throw new Error("Error creating comment.");
-      setCommentContent(""); // Reset comment input field
+      setCommentContent(""); 
     } catch (error) {
       console.error("Error creating comment:", error);
     }
