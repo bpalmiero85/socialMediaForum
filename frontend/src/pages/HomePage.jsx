@@ -7,6 +7,7 @@ import ScrollAnimation from "react-animate-on-scroll";
 import ProfilePicture from "../components/ProfilePicture";
 import Placeholder from "../placeholders/default-placeholder.png";
 import CustomDialog from "../components/CustomDialog";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
   const { user, error } = useFetchUser();
@@ -23,12 +24,18 @@ const HomePage = () => {
   const [dialogPosition, setDialogPosition] = useState({ top: 0, left: 0 });
   const [selectedThreadId, setSelectedThreadId] = useState(null);
   const [commentSubscription, setCommentSubscription] = useState(null);
-  const [deletedCommentSubscription, setDeletedCommentSubscription] = useState(null);
-  const [upvoteCommentSubscription, setUpvoteCommentSubscription] = useState(null);
+  const [deletedCommentSubscription, setDeletedCommentSubscription] =
+    useState(null);
+  const [upvoteCommentSubscription, setUpvoteCommentSubscription] =
+    useState(null);
+  const [showAlert, setShowAlert] = useState(false);
   const [profilePictureUrl, setProfilePictureUrl] = useState(
     user?.profilePicture || Placeholder
   );
   const [commentsByThread, setCommentsByThread] = useState({});
+  const [showHomePageContent, setShowHomePageContent] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchThreads();
@@ -38,6 +45,16 @@ const HomePage = () => {
       if (stompClient) stompClient.deactivate();
     };
   }, []);
+
+  useEffect(() => {
+    if (user || user?.username) {
+      setShowHomePageContent(true);
+      setShowAlert(false);
+    } else {
+      setShowHomePageContent(false);
+      setShowAlert(true);
+    }
+  }, [user]);
 
   const fetchThreads = async () => {
     try {
@@ -88,6 +105,30 @@ const HomePage = () => {
     }
   };
 
+  useEffect(() => {
+    if (!user || !user.username) {
+      setShowHomePageContent(false);
+      setShowAlert(true);
+    } else {
+      setShowAlert(false);
+    }
+  }, [user]);
+
+  const CustomAlert = ({ onSignIn }) => {
+    return (
+      <div className="custom-alert">
+        <p>User not available. Please sign in.</p>
+        <button className="alert-sign-in-button" onClick={onSignIn}>
+          Click here to sign in
+        </button>
+      </div>
+    );
+  };
+
+  const handleAlertSignIn = () => {
+    navigate("/");
+  };
+
   const connectWebSocket = () => {
     const socketUrl = "http://localhost:8080/ws";
     const createSocket = () => new SockJS(socketUrl);
@@ -102,14 +143,10 @@ const HomePage = () => {
         console.log("Connected to WebSocket", frame);
 
         stompClient.subscribe("/topic/comments/created", (message) => {
-          const { forumThreadId, newComment } = JSON.parse(message.body);
-
+          const { forumThreadId, thread } = JSON.parse(message.body);
           setCommentsByThread((prevComments) => ({
             ...prevComments,
-            [forumThreadId]: [
-              ...(prevComments[forumThreadId] || []),
-              newComment,
-            ],
+            [forumThreadId]: [...(prevComments[forumThreadId] || []), thread],
           }));
 
           setThreads((prevThreads) =>
@@ -247,83 +284,83 @@ const HomePage = () => {
 
       fetchComments(thread.forumThreadId);
 
-      if (stompClient && stompClient.connected) {
-        if (commentSubscription) commentSubscription.unsubscribe();
-        if (deletedCommentSubscription) deletedCommentSubscription.unsubscribe();
-        if (upvoteCommentSubscription) upvoteCommentSubscription.unsubscribe();
+      if (deletedCommentSubscription) deletedCommentSubscription.unsubscribe();
+      if (commentSubscription) commentSubscription.unsubscribe();
+      if (upvoteCommentSubscription) upvoteCommentSubscription.unsubscribe();
 
-        const newCommentSubscription = stompClient.subscribe(
-          `/topic/comments/${thread.forumThreadId}`,
-          (message) => {
-            const newComment = JSON.parse(message.body);
-            setCommentsByThread((prevComments) => ({
-              ...prevComments,
-              [thread.forumThreadId]: [
-                ...(prevComments[thread.forumThreadId] || []),
-                newComment,
-              ],
-            }));
-            setThreads((prevThreads) =>
-              prevThreads.map((thread) =>
-                thread.forumThreadId === thread.forumThreadId
-                  ? { ...thread, commentCount: (thread.commentCount || 0) + 1 }
-                  : thread
-              )
-            );
-          }
-        );
-
-        const newDeletedCommentSubscription = stompClient.subscribe(
-          `/topic/comments/deleted/${thread.forumThreadId}`,
-          (message) => {
-              const { postId } = JSON.parse(message.body);
-              setCommentsByThread((prevComments) => {
-                  const updatedComments = (
-                      prevComments[thread.forumThreadId] || []
-                  ).filter((comment) => comment.postId !== postId);
-                  return {
-                      ...prevComments,
-                      [thread.forumThreadId]: updatedComments,
-                  };
-              });
-              setThreads((prevThreads) =>
-                  prevThreads.map((thread) =>
-                      thread.forumThreadId === thread.forumThreadId
-                          ? {
-                                ...thread,
-                                commentCount: Math.max((thread.commentCount || 1) - 1, 0),
-                            }
-                          : thread
-                  )
-              );
-          }
+      const newCommentSubscription = stompClient.subscribe(
+        `/topic/comments/${thread.forumThreadId}`,
+        (message) => {
+          const newComment = JSON.parse(message.body);
+          setCommentsByThread((prevComments) => ({
+            ...prevComments,
+            [thread.forumThreadId]: [
+              ...(prevComments[thread.forumThreadId] || []),
+              newComment,
+            ],
+          }));
+          setThreads((prevThreads) =>
+            prevThreads.map((thread) =>
+              thread.forumThreadId === thread.forumThreadId
+                ? { ...thread, commentCount: (thread.commentCount || 0) + 1 }
+                : thread
+            )
+          );
+        }
       );
+
+      const newDeletedCommentSubscription = stompClient.subscribe(
+        `/topic/comments/deleted/${thread.forumThreadId}`,
+        (message) => {
+          const { forumThreadId, postId } = JSON.parse(message.body);
+          setCommentsByThread((prevComments) => {
+            const updatedComments = (prevComments[forumThreadId] || []).filter(
+              (comment) => comment.postId !== postId
+            );
+            return {
+              ...prevComments,
+              [forumThreadId]: updatedComments,
+            };
+          });
+
+          setThreads((prevThreads) =>
+            prevThreads.map((thread) =>
+              thread.forumThreadId === forumThreadId
+                ? {
+                    ...thread,
+                    commentCount: Math.max((thread.commentCount || 1) - 1, 0),
+                  }
+                : thread
+            )
+          );
+        }
+      );
+
       const newUpvoteCommentSubscription = stompClient.subscribe(
         `/topic/comments/upvoted/${thread.forumThreadId}`,
         (message) => {
-            const updatedComment = JSON.parse(message.body);
-            setCommentsByThread((prevComments) => {
-                const updatedComments = (
-                    prevComments[thread.forumThreadId] || []
-                ).map((comment) =>
-                    comment.postId === updatedComment.postId
-                        ? updatedComment
-                        : comment
-                );
-                return {
-                    ...prevComments,
-                    [thread.forumThreadId]: updatedComments,
-                };
-            });
+          const updatedComment = JSON.parse(message.body);
+          setCommentsByThread((prevComments) => {
+            const updatedComments = (
+              prevComments[thread.forumThreadId] || []
+            ).map((comment) =>
+              comment.postId === updatedComment.postId
+                ? updatedComment
+                : comment
+            );
+            return {
+              ...prevComments,
+              [thread.forumThreadId]: updatedComments,
+            };
+          });
         }
-    );
+      );
 
-    setCommentSubscription(newCommentSubscription);
-    setDeletedCommentSubscription(newDeletedCommentSubscription);
-    setUpvoteCommentSubscription(newUpvoteCommentSubscription);
-}
-}
-};
+      setCommentSubscription(newCommentSubscription);
+      setDeletedCommentSubscription(newDeletedCommentSubscription);
+      setUpvoteCommentSubscription(newUpvoteCommentSubscription);
+    }
+  };
 
   const handleCreateComment = async (e, forumThreadId) => {
     e.preventDefault();
@@ -347,7 +384,7 @@ const HomePage = () => {
       );
 
       if (!response.ok) throw new Error("Error creating comment.");
-      setCommentContent(""); 
+      setCommentContent("");
     } catch (error) {
       console.error("Error creating comment:", error);
     }
@@ -436,7 +473,7 @@ const HomePage = () => {
     e.preventDefault();
 
     if (!user || !user.username) {
-      console.error("User not available. Please log in.");
+      window.alert("User not available. Please sign in");
       return;
     }
 
@@ -546,221 +583,232 @@ const HomePage = () => {
   return (
     <div className="home-container">
       <div className="home-content">
-        <div className="home-header">
-          <ScrollAnimation animateIn="fadeIn">
-            <span>H</span>
-            <span>O</span>
-            <span>M</span>
-            <span>E</span>
-          </ScrollAnimation>
-        </div>
+        {showHomePageContent ? (
+          <>
+            <div className="home-header">
+              <ScrollAnimation animateIn="fadeIn">
+                <span>H</span>
+                <span>O</span>
+                <span>M</span>
+                <span>E</span>
+              </ScrollAnimation>
+            </div>
 
-        <div className="home-message">
-          <ScrollAnimation animateIn="bounceIn">
-            <p>
-              Hello, {user?.firstName ? user.firstName : "Guest"}! What would
-              you like to do?
-            </p>
-          </ScrollAnimation>
-        </div>
-
-        <ProfilePicture
-          onUpload={() => setIsPictureUploaded(true)}
-          isPictureUploaded={isPictureUploaded}
-          setIsPictureUploaded={setIsPictureUploaded}
-          setCroppingStatus={setIsCropping}
-        />
-
-        {!isCropping && !showForm && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="create-thread-button"
-          >
-            Create Post
-          </button>
-        )}
-
-        {showForm && (
-          <form onSubmit={handleCreateThread} className="thread-form">
-            <h2 className="create-thread-title">Create Post</h2>
-            <label className="thread-input">
-              Title:
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-            </label>
-            <label className="thread-input">
-              Content:
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                required
-              />
-            </label>
-            <button type="submit" className="create-button">
-              Post
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowForm(false)}
-              className="cancel-thread-button"
-            >
-              Cancel
-            </button>
-          </form>
-        )}
-
-        {!showForm && threads.length > 0 && (
-          <div className="thread-list">
-            <h3>Recent Posts:</h3>
-
-            {threads.map((thread) => (
-              <div
-                key={thread.forumThreadId}
-                className={`thread-item ${
-                  selectedThread?.forumThreadId === thread.forumThreadId
-                    ? "selected"
-                    : ""
-                }`}
-                onClick={() => handleThreadClick(thread)}
-              >
-                <h4 className="thread-title">{thread.title}</h4>
-                <div className="thread-user-info">
-                  {thread.user?.profilePicture ? (
-                    <img
-                      src={`http://localhost:8080/uploads/${thread.user.profilePicture}`}
-                      alt={`${thread.user.username}'s profile`}
-                      className="profile-picture-small"
-                    />
-                  ) : (
-                    <img
-                      src={Placeholder}
-                      alt="default"
-                      className="profile-picture-small"
-                    />
-                  )}
-                  <p className="comment-username">{thread.user?.username}</p>
-                </div>
-                <p className="thread-created-at">{thread.createdAt}</p>
-                <p className="thread-content">{thread.content}</p>
-
-                {user?.username === thread.user?.username && (
-                  <button
-                    className="delete-comment-button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      showDialog(e, thread.forumThreadId);
-                    }}
-                  >
-                    Delete
-                  </button>
-                )}
-                <div>
-                  <button
-                    className="like-button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleUpvoteThread(thread.forumThreadId);
-                    }}
-                  >
-                    👍 Like
-                  </button>
-                </div>
-                <span className="post-likes">{thread.threadUpvotes} Likes</span>
-                <p className="thread-comments">
-                  Comments:{" "}
-                  {commentsByThread[thread.forumThreadId]?.length ||
-                    thread.commentCount}
+            <div className="home-message">
+              <ScrollAnimation animateIn="bounceIn">
+                <p>
+                  Hello, {user?.firstName ? user.firstName : "Guest"}! What
+                  would you like to do?
                 </p>
+              </ScrollAnimation>
+            </div>
+            <ProfilePicture
+              onUpload={() => setIsPictureUploaded(true)}
+              isPictureUploaded={isPictureUploaded}
+              setIsPictureUploaded={setIsPictureUploaded}
+              setCroppingStatus={setIsCropping}
+            />
+            {!isCropping && !showForm && (
+              <button
+                onClick={() => setShowForm(true)}
+                className="create-thread-button"
+              >
+                Create Post
+              </button>
+            )}
+            {showForm && (
+              <form onSubmit={handleCreateThread} className="thread-form">
+                <h2 className="create-thread-title">Create Post</h2>
+                <label className="thread-input">
+                  Title:
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                  />
+                </label>
+                <label className="thread-input">
+                  Content:
+                  <textarea
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    required
+                  />
+                </label>
+                <button type="submit" className="create-button">
+                  Post
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="cancel-thread-button"
+                >
+                  Cancel
+                </button>
+              </form>
+            )}
+            {!showForm && threads.length > 0 && (
+              <div className="thread-list">
+                <h3>Recent Posts:</h3>
 
-                {selectedThread?.forumThreadId === thread.forumThreadId && (
-                  <div className="thread-details">
-                    <h3 className="comments-header">Comments:</h3>
-                    <div className="comment-list">
-                      {(commentsByThread[thread.forumThreadId] || []).map(
-                        (comment) => (
-                          <div key={comment.postId} className="comment-item">
-                            <div className="comment-user-info">
-                              {comment.user?.profilePicture ? (
-                                <img
-                                  src={`http://localhost:8080/uploads/${comment.user.profilePicture}`}
-                                  alt={`${comment.user.username}'s profile`}
-                                  className="profile-picture-small"
-                                />
-                              ) : (
-                                <img
-                                  src={Placeholder}
-                                  alt="default"
-                                  className="profile-picture-small"
-                                />
-                              )}
-                              <span>{comment.user.username}</span>
-                            </div>
-                            <p>{comment.postContent}</p>
-                            <div className="like-container">
-                              <button
-                                className="like-button"
-                                onClick={() =>
-                                  handleUpvoteComment(comment.postId)
-                                }
-                              >
-                                👍 Like
-                              </button>
-                              <span className="post-likes">
-                                {comment.postUpvotes} Likes
-                              </span>
-                            </div>
-                            <p className="comment-created-at">
-                              {comment.postCreatedAt}
-                            </p>
-                            {user?.username === comment.user?.username && (
-                              <button
-                                className="delete-comment-button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteComment(comment.postId);
-                                }}
-                              >
-                                Delete
-                              </button>
-                            )}
-                          </div>
-                        )
+                {threads.map((thread) => (
+                  <div
+                    key={thread.forumThreadId}
+                    className={`thread-item ${
+                      selectedThread?.forumThreadId === thread.forumThreadId
+                        ? "selected"
+                        : ""
+                    }`}
+                    onClick={() => handleThreadClick(thread)}
+                  >
+                    <h4 className="thread-title">{thread.title}</h4>
+                    <div className="thread-user-info">
+                      {thread.user?.profilePicture ? (
+                        <img
+                          src={`http://localhost:8080/uploads/${thread.user.profilePicture}`}
+                          alt={`${thread.user.username}'s profile`}
+                          className="profile-picture-small"
+                        />
+                      ) : (
+                        <img
+                          src={Placeholder}
+                          alt="default"
+                          className="profile-picture-small"
+                        />
                       )}
+                      <p className="comment-username">
+                        {thread.user?.username}
+                      </p>
                     </div>
-                    <form
-                      onSubmit={(e) =>
-                        handleCreateComment(e, selectedThread.forumThreadId)
-                      }
-                      className="comment-form"
-                    >
-                      <textarea
-                        value={commentContent}
-                        onChange={(e) => setCommentContent(e.target.value)}
-                        required
-                        placeholder="Add a comment..."
-                      ></textarea>
-                      <button type="submit" className="create-comment-button">
-                        Comment
-                      </button>
-                    </form>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                    <p className="thread-created-at">{thread.createdAt}</p>
+                    <p className="thread-content">{thread.content}</p>
 
-        {isDialogOpen && (
-          <CustomDialog
-            position={dialogPosition}
-            message="Are you sure you want to delete this post?"
-            onConfirm={handleConfirmDelete}
-            onCancel={handleCancelDelete}
-          />
+                    {user?.username === thread.user?.username && (
+                      <button
+                        className="delete-comment-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          showDialog(e, thread.forumThreadId);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
+                    <div>
+                      <button
+                        className="like-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUpvoteThread(thread.forumThreadId);
+                        }}
+                      >
+                        👍 Like
+                      </button>
+                    </div>
+                    <span className="post-likes">
+                      {thread.threadUpvotes} Likes
+                    </span>
+                    <p className="thread-comments">
+                      Comments:{" "}
+                      {commentsByThread[thread.forumThreadId]?.length ||
+                        thread.commentCount}
+                    </p>
+
+                    {selectedThread?.forumThreadId === thread.forumThreadId && (
+                      <div className="thread-details">
+                        <h3 className="comments-header">Comments:</h3>
+                        <div className="comment-list">
+                          {(commentsByThread[thread.forumThreadId] || []).map(
+                            (comment) => (
+                              <div
+                                key={comment.postId}
+                                className="comment-item"
+                              >
+                                <div className="comment-user-info">
+                                  {comment.user?.profilePicture ? (
+                                    <img
+                                      src={`http://localhost:8080/uploads/${comment.user.profilePicture}`}
+                                      alt={`${comment.user.username}'s profile`}
+                                      className="profile-picture-small"
+                                    />
+                                  ) : (
+                                    <img
+                                      src={Placeholder}
+                                      alt="default"
+                                      className="profile-picture-small"
+                                    />
+                                  )}
+                                  <span>{comment.user.username}</span>
+                                </div>
+                                <p>{comment.postContent}</p>
+                                <div className="like-container">
+                                  <button
+                                    className="like-button"
+                                    onClick={() =>
+                                      handleUpvoteComment(comment.postId)
+                                    }
+                                  >
+                                    👍 Like
+                                  </button>
+                                  <span className="post-likes">
+                                    {comment.postUpvotes} Likes
+                                  </span>
+                                </div>
+                                <p className="comment-created-at">
+                                  {comment.postCreatedAt}
+                                </p>
+                                {user?.username === comment.user?.username && (
+                                  <button
+                                    className="delete-comment-button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteComment(comment.postId);
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
+                                )}
+                              </div>
+                            )
+                          )}
+                        </div>
+                        <form
+                          onSubmit={(e) =>
+                            handleCreateComment(e, selectedThread.forumThreadId)
+                          }
+                          className="comment-form"
+                        >
+                          <textarea
+                            value={commentContent}
+                            onChange={(e) => setCommentContent(e.target.value)}
+                            required
+                            placeholder="Add a comment..."
+                          ></textarea>
+                          <button
+                            type="submit"
+                            className="create-comment-button"
+                          >
+                            Comment
+                          </button>
+                        </form>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {isDialogOpen && (
+              <CustomDialog
+                position={dialogPosition}
+                message="Are you sure you want to delete this post?"
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+              />
+            )}
+          </>
+        ) : (
+          <CustomAlert onSignIn={handleAlertSignIn} />
         )}
       </div>
     </div>

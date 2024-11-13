@@ -13,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -114,10 +116,14 @@ public class PostController {
 
       messagingTemplate.convertAndSend("/topic/threads", forumThread);
 
-      messagingTemplate.convertAndSend("/topic/comments/deleted/" + forumThread.getForumThreadId(), postId);
+        Map<String, Long> deleteInfo = new HashMap<>();
+        deleteInfo.put("forumThreadId", forumThread.getForumThreadId());
+        deleteInfo.put("postId", postId);
+        
+        messagingTemplate.convertAndSend("/topic/comments/deleted/" + forumThread.getForumThreadId(), deleteInfo);
 
-      return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build();
     }
     return ResponseEntity.badRequest().build();
-  }
+}
 }

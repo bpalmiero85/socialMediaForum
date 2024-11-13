@@ -80,6 +80,7 @@ body {
   justify-content: center;
 }
 
+.alert-sign-in-button,
 .upload-button {
   padding: 10px 20px;
   border-radius: 5px;
@@ -183,7 +184,8 @@ body {
 .update-pic-button:hover,
 .create-thread-button:hover,
 .create-thread-button-after:hover,
-.cancel-thread-button:hover {
+.cancel-thread-button:hover,
+.alert-sign-in-button:hover {
   background-color: #5621b2;
 }
 
@@ -421,6 +423,19 @@ body {
   border-radius: 5px;
   font-size: 1rem;
   margin-bottom: 10px;
+}
+
+.custom-alert {
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  z-index: 3000;
+
+
 }
 
 .profile-picture {
