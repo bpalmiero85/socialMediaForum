@@ -188,7 +188,7 @@ const HomePage = () => {
               thread.forumThreadId === forumThreadId
                 ? {
                     ...thread,
-                    commentCount: Math.max((thread.commentCount || 1) - 1, 0),
+                    commentCount: Math.max((thread.commentCount || 0) - 1, 0),
                   }
                 : thread
             )
@@ -328,7 +328,7 @@ const HomePage = () => {
               thread.forumThreadId === forumThreadId
                 ? {
                     ...thread,
-                    commentCount: Math.max((thread.commentCount || 1) - 1, 0),
+                    commentCount: Math.max((thread.commentCount || 0) - 1, 0),
                   }
                 : thread
             )
