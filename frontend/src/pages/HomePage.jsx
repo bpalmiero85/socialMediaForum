@@ -188,7 +188,7 @@ const HomePage = () => {
               thread.forumThreadId === forumThreadId
                 ? {
                     ...thread,
-                    commentCount: Math.max((thread.commentCount || 0) - 1, 0),
+                    commentCount: Math.max((thread.commentCount || 1) - 1, 0),
                   }
                 : thread
             )
@@ -300,10 +300,13 @@ const HomePage = () => {
             ],
           }));
           setThreads((prevThreads) =>
-            prevThreads.map((thread) =>
-              thread.forumThreadId === thread.forumThreadId
-                ? { ...thread, commentCount: (thread.commentCount || 0) + 1 }
-                : thread
+            prevThreads.map((threadItem) =>
+              threadItem.forumThreadId === thread.forumThreadId
+                ? {
+                    ...threadItem,
+                    commentCount: (threadItem.commentCount || 0) + 1,
+                  }
+                : threadItem
             )
           );
         }
@@ -324,13 +327,16 @@ const HomePage = () => {
           });
 
           setThreads((prevThreads) =>
-            prevThreads.map((thread) =>
-              thread.forumThreadId === forumThreadId
+            prevThreads.map((threadItem) =>
+              threadItem.forumThreadId === forumThreadId
                 ? {
-                    ...thread,
-                    commentCount: Math.max((thread.commentCount || 0) - 1, 0),
+                    ...threadItem,
+                    commentCount: Math.max(
+                      (threadItem.commentCount || 0) - 1,
+                      0
+                    ),
                   }
-                : thread
+                : threadItem
             )
           );
         }
@@ -571,7 +577,7 @@ const HomePage = () => {
       setThreads((prevThreads) =>
         prevThreads.map((thread) =>
           thread.forumThreadId === selectedThread.forumThreadId
-            ? { ...thread, commentCount: thread.commentCount - 1 }
+            ? { ...thread, commentCount: thread.commentCount }
             : thread
         )
       );
