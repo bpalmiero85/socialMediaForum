@@ -143,10 +143,22 @@ const HomePage = () => {
         console.log("Connected to WebSocket", frame);
 
         stompClient.subscribe("/topic/comments/created", (message) => {
-          const { forumThreadId, thread } = JSON.parse(message.body);
+          const payload = JSON.parse(message.body);
+          console.log("Received comment created payload:", payload);
+
+          const { forumThreadId, newComment } = payload;
+
+          if (!forumThreadId || !newComment) {
+            console.error("Invalid comment creation payload:", payload);
+            return;
+          }
+
           setCommentsByThread((prevComments) => ({
             ...prevComments,
-            [forumThreadId]: [...(prevComments[forumThreadId] || []), thread],
+            [forumThreadId]: [
+              ...(prevComments[forumThreadId] || []),
+              newComment,
+            ],
           }));
 
           setThreads((prevThreads) =>
@@ -292,6 +304,7 @@ const HomePage = () => {
         `/topic/comments/${thread.forumThreadId}`,
         (message) => {
           const newComment = JSON.parse(message.body);
+
           setCommentsByThread((prevComments) => ({
             ...prevComments,
             [thread.forumThreadId]: [
@@ -299,6 +312,7 @@ const HomePage = () => {
               newComment,
             ],
           }));
+
           setThreads((prevThreads) =>
             prevThreads.map((threadItem) =>
               threadItem.forumThreadId === thread.forumThreadId
@@ -715,11 +729,13 @@ const HomePage = () => {
                     <span className="post-likes">
                       {thread.threadUpvotes} Likes
                     </span>
-                    <p className="thread-comments">
-                      Comments:{" "}
-                      {commentsByThread[thread.forumThreadId]?.length ||
-                        thread.commentCount}
-                    </p>
+                      <p className="thread-comments">
+                        Comments:{" "}
+                        {commentsByThread[thread.forumThreadId]?.length ||
+                          thread.commentCount ||
+                          0}
+                      </p>
+              
 
                     {selectedThread?.forumThreadId === thread.forumThreadId && (
                       <div className="thread-details">
