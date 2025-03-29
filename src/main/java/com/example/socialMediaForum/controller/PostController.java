@@ -6,6 +6,7 @@ import com.example.socialMediaForum.service.PostService;
 import com.example.socialMediaForum.service.ThreadService;
 import com.example.socialMediaForum.service.UserService;
 
+
 import com.example.socialMediaForum.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -68,6 +69,12 @@ public class PostController {
 
     messagingTemplate.convertAndSend("/topic/comments/" + threadId, savedPost);
 
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("forumThreadId", threadId);
+    payload.put("newComment", savedPost);
+
+    messagingTemplate.convertAndSend("/topic/comments/created", payload);
+
     int updatedCommentCount = postService.getAllPostsByThreadId(threadId).size();
     messagingTemplate.convertAndSend("/topic/comments/count/" + threadId, updatedCommentCount);
 
@@ -116,14 +123,14 @@ public class PostController {
 
       messagingTemplate.convertAndSend("/topic/threads", forumThread);
 
-        Map<String, Long> deleteInfo = new HashMap<>();
-        deleteInfo.put("forumThreadId", forumThread.getForumThreadId());
-        deleteInfo.put("postId", postId);
-        
-        messagingTemplate.convertAndSend("/topic/comments/deleted/" + forumThread.getForumThreadId(), deleteInfo);
+      Map<String, Long> deleteInfo = new HashMap<>();
+      deleteInfo.put("forumThreadId", forumThread.getForumThreadId());
+      deleteInfo.put("postId", postId);
 
-        return ResponseEntity.noContent().build();
+      messagingTemplate.convertAndSend("/topic/comments/deleted/" + forumThread.getForumThreadId(), deleteInfo);
+
+      return ResponseEntity.noContent().build();
     }
     return ResponseEntity.badRequest().build();
-}
+  }
 }

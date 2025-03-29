@@ -402,6 +402,7 @@ const HomePage = () => {
           credentials: "include",
         }
       );
+      console.log("Submitting comment for thread id: " + forumThreadId);
 
       if (!response.ok) throw new Error("Error creating comment.");
       setCommentContent("");
