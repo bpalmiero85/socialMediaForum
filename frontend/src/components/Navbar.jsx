@@ -135,7 +135,7 @@ function Navbar() {
 
   return (
     <div className="navbar">
-      <div className="navbar-title">My Application</div>
+      <div className="navbar-title">Your World</div>
       {showNavLinks()}
     </div>
   );

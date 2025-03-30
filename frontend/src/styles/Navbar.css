@@ -37,7 +37,6 @@
 .links-container {
   display: flex;
   align-items: center;
-  margin-left: auto;
 }
 
 .edit-profile-link {
@@ -47,4 +46,12 @@
 
 .active {
   background-color: #5fadc3;
+}
+
+@media(max-width: 460px){
+  .navbar a{
+    font-size: 1rem;
+    white-space: nowrap;
+    padding: 5px;
+  }
 }

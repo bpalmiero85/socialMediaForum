@@ -128,7 +128,7 @@ const UserInfo = () => {
       <div className="user-info-box">
         <div className="user-info-field-inputs">
           <div className="user-info-field">
-            <strong>First Name:</strong>
+           <strong>First Name:</strong>
             {isEdit.firstName ? (
               <div>
                 <input
@@ -163,7 +163,7 @@ const UserInfo = () => {
           </div>
 
           <div className="user-info-field">
-            <strong>Last Name:</strong>
+          <strong>Last Name:</strong>
             {isEdit.lastName ? (
               <div>
                 <input
@@ -252,11 +252,13 @@ const UserInfo = () => {
           </div>
         </div>
       </div>
+      <div className="delete-button">
       {user?.username && user?.id && (
         <button className="delete-profile" onClick={handleDeleteUser}>
           Delete Profile
         </button>
       )}
+      </div>
     </div>
   );
 };

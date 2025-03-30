@@ -103,6 +103,7 @@ body {
 
 .navbar {
   width: 100%;
+  max-width: 100%;
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 10px 20px;
@@ -130,6 +131,7 @@ body {
   font-size: 1.2rem;
   text-align: center;
   margin-bottom: 20px;
+  padding: 15px;
 }
 
 .error-message,
@@ -265,7 +267,8 @@ body {
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-bottom: 20px;
+  padding-top: 35px;
+  margin-bottom: 15px;
 }
 
 .thread-item {
@@ -586,11 +589,26 @@ body {
 }
 
 @media(max-width: 460px){
-  .thread-item{
-    width: 80%;
+
+  .home-container{
+    width: 100%;
+    max-width: 100%;
   }
 
-  .thread-input{
-    margin-right: 40px;
+  .home-content{
+   min-width: 80% !important;
+   max-width: 80% !important;
   }
+
+
+  .thread-item{
+    width: 95%;
+    padding: 10px;
+  }
+
+  .navbar {
+    width: 100%;
+    max-width: 100%;
+  }
+
 }

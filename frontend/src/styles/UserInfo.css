@@ -11,10 +11,17 @@
   height: 100%;
 }
 
+
+.delete-button {
+  display: flex;
+  position: relative;
+  top: -150px;
+}
+
 .profile-picture-info{
   display: flex;
   position: absolute;
-  margin-top: -580px;
+  margin-top: -880px;
   justify-content: center;
   width: 150px;
   height: 150px;
@@ -26,7 +33,7 @@
 
 .user-info-header {
   position: absolute;
-  margin-top: -370px;
+  margin-top: -640px;
   text-align: center;
   text-decoration: underline;
   z-index: 2;
@@ -37,7 +44,9 @@
   display: inline-block;
   flex-direction: column;
   align-items: flex-start;
-  margin-top: -75px;
+  width: 35%;
+  max-width: 35%;
+  margin-top: -450px;
   text-align: left;
   background-color: rgba(173, 216, 230, 0.649);
   border-radius: 15px;
@@ -45,8 +54,10 @@
   z-index: 1;
 }
 
+
 .user-info-field-inputs {
   display: flex;
+  margin-top: 45px;
   flex-direction: column;
   position: static;
   width: 100%;
@@ -65,4 +76,53 @@
 
 .email-validation-error {
   color: red;
+}
+
+@media(max-width: 1200px){
+  .user-info-box{
+    width: 350px;
+    max-width: 400px;
+  }
+}
+
+@media(max-width: 460px){
+  .user-info-box{
+    top: 660px;
+    max-width: 330px;
+  }
+
+  .user-info-header{
+    top: 835px;
+  }
+
+  .profile-picture-info{
+    top: 905px;
+  }
+
+  .delete-button{
+    top: 5px;
+  }
+
+
+
+
+}
+
+@media(max-width: 768px){
+  .user-info-box{
+    top: 660px;
+    max-width: 330px;
+  }
+
+  .user-info-header{
+    top: 835px;
+  }
+
+  .profile-picture-info{
+    top: 905px;
+  }
+
+  .delete-button{
+    top: 5px;
+  }
 }
