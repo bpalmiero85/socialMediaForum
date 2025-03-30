@@ -640,6 +640,7 @@ const HomePage = () => {
             {showForm && (
               <form onSubmit={handleCreateThread} className="thread-form">
                 <h2 className="create-thread-title">Create Post</h2>
+                <div className="input-container">
                 <label className="thread-input">
                   Title:
                   <input
@@ -657,6 +658,8 @@ const HomePage = () => {
                     required
                   />
                 </label>
+                </div>
+                <div className="post-button-container">
                 <button type="submit" className="create-button">
                   Post
                 </button>
@@ -667,6 +670,7 @@ const HomePage = () => {
                 >
                   Cancel
                 </button>
+                </div>
               </form>
             )}
             {!showForm && threads.length > 0 && (
