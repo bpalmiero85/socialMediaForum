@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import "../styles/HomePage.css";
@@ -34,8 +34,15 @@ const HomePage = () => {
   );
   const [commentsByThread, setCommentsByThread] = useState({});
   const [showHomePageContent, setShowHomePageContent] = useState(false);
+  const activeThreadRef = useRef(null);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    activeThreadRef.current = selectedThread
+      ? selectedThread.forumThreadId
+      : null;
+  }, [selectedThread]);
 
   useEffect(() => {
     fetchThreads();
@@ -148,6 +155,10 @@ const HomePage = () => {
 
           const { forumThreadId, newComment } = payload;
 
+          if (activeThreadRef.current === forumThreadId) {
+            return;
+          }
+
           if (!forumThreadId || !newComment) {
             console.error("Invalid comment creation payload:", payload);
             return;
@@ -172,6 +183,10 @@ const HomePage = () => {
 
         stompClient.subscribe("/topic/threads/commentCount", (message) => {
           const { threadId, commentCount } = JSON.parse(message.body);
+
+          if (activeThreadRef.current === threadId) {
+            return;
+          }
 
           setThreads((prevThreads) =>
             prevThreads.map((thread) =>
@@ -641,35 +656,35 @@ const HomePage = () => {
               <form onSubmit={handleCreateThread} className="thread-form">
                 <h2 className="create-thread-title">Create Post</h2>
                 <div className="input-container">
-                <label className="thread-input">
-                  Title:
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                  />
-                </label>
-                <label className="thread-input">
-                  Content:
-                  <textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    required
-                  />
-                </label>
+                  <label className="thread-input">
+                    Title:
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      required
+                    />
+                  </label>
+                  <label className="thread-input">
+                    Content:
+                    <textarea
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      required
+                    />
+                  </label>
                 </div>
                 <div className="post-button-container">
-                <button type="submit" className="create-button">
-                  Post
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="cancel-thread-button"
-                >
-                  Cancel
-                </button>
+                  <button type="submit" className="create-button">
+                    Post
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="cancel-thread-button"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </form>
             )}
@@ -734,13 +749,12 @@ const HomePage = () => {
                     <span className="post-likes">
                       {thread.threadUpvotes} Likes
                     </span>
-                      <p className="thread-comments">
-                        Comments:{" "}
-                        {commentsByThread[thread.forumThreadId]?.length ||
-                          thread.commentCount ||
-                          0}
-                      </p>
-              
+                    <p className="thread-comments">
+                      Comments:{" "}
+                      {commentsByThread[thread.forumThreadId]?.length ||
+                        thread.commentCount ||
+                        0}
+                    </p>
 
                     {selectedThread?.forumThreadId === thread.forumThreadId && (
                       <div className="thread-details">

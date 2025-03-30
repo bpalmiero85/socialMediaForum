@@ -271,6 +271,7 @@ body {
 .thread-item {
   background-color: #ffffff;
   border: 2px solid #ccc;
+  max-width: 100%;
   border-radius: 8px;
   padding: 15px;
   margin-bottom: 10px;
@@ -582,4 +583,14 @@ body {
 .home-header span:nth-child(5).active {
   animation: shrinkjump 1s ease-in-out;
   transform-origin: bottom center;
+}
+
+@media(max-width: 460px){
+  .thread-item{
+    width: 80%;
+  }
+
+  .thread-input{
+    margin-right: 40px;
+  }
 }
