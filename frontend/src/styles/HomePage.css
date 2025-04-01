@@ -624,6 +624,24 @@ body {
   .close-button{
     position: relative;
     width: 25px;
+    left: 97%;
+    bottom: 50px;
+  }
+}
+
+@media(max-width: 968px){
+  .close-button{
+    position: relative;
+    width: 25px;
+    left: 97%;
+    bottom: 50px;
+  }
+}
+
+@media(max-width: 668px){
+  .close-button{
+    position: relative;
+    width: 25px;
     left: 95%;
     bottom: 50px;
   }
