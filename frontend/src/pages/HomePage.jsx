@@ -35,6 +35,7 @@ const HomePage = () => {
   const [commentsByThread, setCommentsByThread] = useState({});
   const [showHomePageContent, setShowHomePageContent] = useState(false);
   const activeThreadRef = useRef(null);
+  const threadContainerRef = useRef(null);
 
   const navigate = useNavigate();
 
@@ -157,7 +158,7 @@ const HomePage = () => {
           const { forumThreadId, newComment } = payload;
           console.log("Received comment created payload:", payload);
 
-          if(activeThreadRef.current === forumThreadId) {
+          if (activeThreadRef.current === forumThreadId) {
             return;
           }
 
@@ -374,6 +375,23 @@ const HomePage = () => {
       setUpvoteCommentSubscription(newUpvoteCommentSubscription);
     }
   };
+
+  useEffect(() => {
+    const handleClickOutsideThread = (event) => {
+      if (
+        threadContainerRef.current &&
+        !threadContainerRef.current.contains(event.target)
+      ) {
+        setSelectedThread(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutsideThread);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideThread);
+    };
+  }, []);
 
   const handleCreateComment = async (e, forumThreadId) => {
     e.preventDefault();
@@ -678,6 +696,7 @@ const HomePage = () => {
                         ? "selected"
                         : ""
                     }`}
+                    ref={selectedThread?.forumThreadId === thread.forumThreadId ? threadContainerRef : null}
                     onClick={() => handleThreadClick(thread)}
                   >
                     <h4 className="thread-title">{thread.title}</h4>
@@ -730,12 +749,17 @@ const HomePage = () => {
                     <p className="thread-comments">
                       Comments:{" "}
                       {selectedThread?.forumThreadId === thread.forumThreadId
-                        ? (commentsByThread[thread.forumThreadId]?.length || 0)
+                        ? commentsByThread[thread.forumThreadId]?.length || 0
                         : thread.commentCount || 0}
                     </p>
 
                     {selectedThread?.forumThreadId === thread.forumThreadId && (
-                      <div className="thread-details">
+                      <div
+                        className="thread-details"
+                        ref={threadContainerRef}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
                         <h3 className="comments-header">Comments:</h3>
                         <div className="comment-list">
                           {(commentsByThread[thread.forumThreadId] || []).map(
