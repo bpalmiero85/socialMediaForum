@@ -116,6 +116,11 @@ const HomePage = () => {
     }
   };
 
+  const handleClose = () => {
+    setSelectedThread(null);
+    setShowForm(false);
+  };
+
   useEffect(() => {
     if (!user || !user.username) {
       setShowHomePageContent(false);
@@ -376,7 +381,7 @@ const HomePage = () => {
     }
   };
 
-  useEffect(() => {
+ 
     const handleClickOutsideThread = (event) => {
       if (
         threadContainerRef.current &&
@@ -385,6 +390,7 @@ const HomePage = () => {
         setSelectedThread(null);
       }
     };
+    useEffect(() => {
 
     document.addEventListener("mousedown", handleClickOutsideThread);
 
@@ -747,7 +753,7 @@ const HomePage = () => {
                       {thread.threadUpvotes} Likes
                     </span>
                     <p className="thread-comments">
-                      Comments:{" "}
+                      Comments:{" "} 
                       {selectedThread?.forumThreadId === thread.forumThreadId
                         ? commentsByThread[thread.forumThreadId]?.length || 0
                         : thread.commentCount || 0}
@@ -762,6 +768,7 @@ const HomePage = () => {
                       >
                         <h3 className="comments-header">Comments:</h3>
                         <div className="comment-list">
+                        <button onClick={handleClose} className="close-button">X</button>
                           {(commentsByThread[thread.forumThreadId] || []).map(
                             (comment) => (
                               <div
