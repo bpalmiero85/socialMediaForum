@@ -20,6 +20,9 @@ public class ThreadService {
   @Autowired
   private UserRepository userRepository;
 
+  @Autowired
+  private PostService postService;
+
   public List<ForumThread> getAllThreads() {
     return forumThreadRepository.findAll();
   }
@@ -75,6 +78,17 @@ public class ThreadService {
 
   public ForumThread saveWithoutUpdatingTimeStamp(ForumThread forumThread) {
     return forumThreadRepository.save(forumThread);
+  }
+
+  public List<ForumThread> getAllThreadsWithCommentCounts() {
+    List<ForumThread> threads = forumThreadRepository.findAll();
+
+    for(ForumThread thread : threads){
+      int commentCount = postService.getAllPostsByThreadId(thread.getForumThreadId()).size();
+      thread.setCommentCount(commentCount);
+    }
+
+    return threads;
   }
 
 }

@@ -12,6 +12,7 @@ import javax.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.Transient;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -47,5 +48,16 @@ public class ForumThread {
   @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference
   private List<Post> posts;
+
+  @Transient
+  private int commentCount;
+
+  public int getCommentCount() {
+    return commentCount;
+  }
+
+  public void setCommentCount(int commentCount){
+    this.commentCount = commentCount;
+  }
 
 }

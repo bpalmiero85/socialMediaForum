@@ -73,9 +73,12 @@ const HomePage = () => {
       const threadsWithComments = data.map((thread) => ({
         ...thread,
         comments: Array.isArray(thread.comments) ? thread.comments : [],
-        commentCount: Array.isArray(thread.comments)
-          ? thread.comments.length
-          : 0,
+        commentCount:
+          thread.commentCount !== undefined
+            ? thread.commentCount
+            : Array.isArray(thread.comments)
+            ? thread.comments.length
+            : 0,
       }));
 
       setThreads(threadsWithComments);
@@ -151,11 +154,10 @@ const HomePage = () => {
 
         stompClient.subscribe("/topic/comments/created", (message) => {
           const payload = JSON.parse(message.body);
+          const { forumThreadId, newComment } = payload;
           console.log("Received comment created payload:", payload);
 
-          const { forumThreadId, newComment } = payload;
-
-          if (activeThreadRef.current === forumThreadId) {
+          if(activeThreadRef.current === forumThreadId) {
             return;
           }
 
@@ -171,23 +173,10 @@ const HomePage = () => {
               newComment,
             ],
           }));
-
-          setThreads((prevThreads) =>
-            prevThreads.map((thread) =>
-              thread.forumThreadId === forumThreadId
-                ? { ...thread, commentCount: (thread.commentCount || 0) + 1 }
-                : thread
-            )
-          );
         });
 
         stompClient.subscribe("/topic/threads/commentCount", (message) => {
           const { threadId, commentCount } = JSON.parse(message.body);
-
-          if (activeThreadRef.current === threadId) {
-            return;
-          }
-
           setThreads((prevThreads) =>
             prevThreads.map((thread) =>
               thread.forumThreadId === threadId
@@ -327,17 +316,6 @@ const HomePage = () => {
               newComment,
             ],
           }));
-
-          setThreads((prevThreads) =>
-            prevThreads.map((threadItem) =>
-              threadItem.forumThreadId === thread.forumThreadId
-                ? {
-                    ...threadItem,
-                    commentCount: (threadItem.commentCount || 0) + 1,
-                  }
-                : threadItem
-            )
-          );
         }
       );
 
@@ -751,9 +729,9 @@ const HomePage = () => {
                     </span>
                     <p className="thread-comments">
                       Comments:{" "}
-                      {commentsByThread[thread.forumThreadId]?.length ||
-                        thread.commentCount ||
-                        0}
+                      {selectedThread?.forumThreadId === thread.forumThreadId
+                        ? (commentsByThread[thread.forumThreadId]?.length || 0)
+                        : thread.commentCount || 0}
                     </p>
 
                     {selectedThread?.forumThreadId === thread.forumThreadId && (

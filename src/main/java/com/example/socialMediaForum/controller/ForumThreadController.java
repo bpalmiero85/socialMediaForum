@@ -33,7 +33,7 @@ public class ForumThreadController {
 
   @GetMapping(produces = "application/json")
   public ResponseEntity<List<ForumThread>> getAllThreads() {
-    List<ForumThread> threads = threadService.getAllThreads();
+    List<ForumThread> threads = threadService.getAllThreadsWithCommentCounts();
     return ResponseEntity.ok().body(threads);
   }
 

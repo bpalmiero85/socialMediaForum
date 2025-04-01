@@ -76,7 +76,10 @@ public class PostController {
     messagingTemplate.convertAndSend("/topic/comments/created", payload);
 
     int updatedCommentCount = postService.getAllPostsByThreadId(threadId).size();
-    messagingTemplate.convertAndSend("/topic/comments/count/" + threadId, updatedCommentCount);
+    Map<String, Object> countPayload = new HashMap<>();
+    countPayload.put("threadId", threadId);
+    countPayload.put("commentCount", updatedCommentCount);
+    messagingTemplate.convertAndSend("/topic/threads/commentCount", countPayload);
 
     return ResponseEntity.ok(savedPost);
   }
