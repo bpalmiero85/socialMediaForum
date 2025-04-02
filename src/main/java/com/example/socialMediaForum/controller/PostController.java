@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/posts")
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
@@ -51,7 +53,7 @@ public class PostController {
   public ResponseEntity<Post> createComment(@RequestParam Long threadId,
       @RequestParam String username,
       @RequestBody Post post) {
-
+        System.out.println("Received payload: " + post);
     ForumThread thread = threadService.getThreadById(threadId).orElse(null);
     if (thread == null) {
       return ResponseEntity.badRequest().build();

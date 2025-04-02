@@ -402,6 +402,9 @@ body {
 }
 
 .thread-details {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
   margin-top: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;

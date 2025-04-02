@@ -7,6 +7,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import lombok.Getter;
@@ -32,10 +33,12 @@ public class ForumThread {
 
   private int threadUpvotes;
 
-  private int comments;
+  private int comments = 0;
 
   private String title;
 
+  @Lob
+  @Column(columnDefinition = "CLOB")
   private String content;
 
   private LocalDateTime createdAt;

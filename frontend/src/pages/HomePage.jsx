@@ -219,6 +219,8 @@ const HomePage = () => {
 
         stompClient.subscribe("/topic/threads", (message) => {
           const updatedThread = JSON.parse(message.body);
+          const payload = JSON.parse(message.body);
+          console.log("Received payload from /topic/threads:", payload);
           setThreads((prevThreads) => {
             const threadExists = prevThreads.some(
               (thread) => thread.forumThreadId === updatedThread.forumThreadId
